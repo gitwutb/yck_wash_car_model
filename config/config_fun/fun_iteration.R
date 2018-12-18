@@ -1,0 +1,26 @@
+####################################################
+###########-----函数fun_iteration：迭代函数--------######
+fun_iteration<-function(wutb,confidence,qx_data_input,qx_che300,a){
+  che_result<-fun_match(qx_data_input,qx_che300,a)
+  wutb<-rbind(wutb,che_result)
+  #去掉车300重复
+  linshi_cid<-data.frame(car_id=setdiff(qx_che300$car_id,unique(wutb$id_che300)))
+  qx_che300<-inner_join(qx_che300,linshi_cid,by="car_id")
+  #去掉车data_input重复
+  linshi_rid<-data.frame(X=setdiff(qx_data_input$X,unique(wutb$id_data_input)))
+  qx_data_input<-inner_join(qx_data_input,linshi_rid,by="X")
+  ###########补偿qx_name等于wutb中data_input——name一致(由于系列名不一致)
+  wutb_supplement<-inner_join(qx_data_input,wutb,c("car_model_name"="rname"))%>%dplyr::select(x,id_data_input=X,rname=car_model_name,id_che300,cname)
+  wutb_supplement<-unique(wutb_supplement)
+  wutb<-rbind(wutb,wutb_supplement)
+  #去掉车300重复
+  linshi_cid<-data.frame(car_id=setdiff(qx_che300$car_id,unique(wutb$id_che300)))
+  qx_che300<-inner_join(qx_che300,linshi_cid,by="car_id")
+  #去掉车data_input重复
+  linshi_rid<-data.frame(X=setdiff(qx_data_input$X,unique(wutb$id_data_input)))
+  qx_data_input<-inner_join(qx_data_input,linshi_rid,by="X")
+  #############################可信度1#############################
+  linshicon<-c(length(unique(wutb$id_data_input))/length(wutb$id_data_input),length(unique(wutb$id_data_input)),length(wutb$id_data_input))
+  confidence<-rbind(confidence,linshicon)
+  return(list(wutb=wutb,confidence=confidence,qx_data_input=qx_data_input,qx_che300=qx_che300))
+}
