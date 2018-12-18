@@ -11,7 +11,7 @@ library(ggplot2)
 #help(package="dplyr")
 #读取数据
 library(RMySQL)
-che58_city<- read.csv("E:\\Work_table\\Study\\Rexam\\YCK\\wash_car_model\\config\\config_file\\城市牌照.csv",header = T,sep = ",")
+che58_city<- read.csv("E:\\Work_table\\gitwutb\\git_project\\yck_wash_car_model\\config\\config_file\\城市牌照.csv",header = T,sep = ",")
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
 table.name<-dbListTables(loc_channel)
@@ -557,9 +557,9 @@ wutb$color<-gsub("其他","其它",wutb$color)
 wutb$color<-gsub("色","",wutb$color)
 wutb$color<-gsub("浅|深|象牙|冰川","",wutb$color)
 wutb<-data.frame(wutb,date_add=format(Sys.time(),'%Y-%m-%d'))
-write.csv(wutb,"E:\\Work_table\\Study\\Rexam\\YCK\\wash_car_model\\file\\output_final\\analysis_wide_table.csv",
+write.csv(wutb,"E:\\Work_table\\gitwutb\\git_project\\yck_wash_car_model\\file\\output_final\\analysis_wide_table.csv",
           row.names = F,fileEncoding = "UTF-8",quote = F)
 
 ##日志文件
 n_platform<-data.frame(n_platform,date=Sys.time())
-write.table(n_platform,"E:\\Work_table\\Study\\Rexam\\YCK\\wash_car_model\\file\\output_final\\analysis_wide_table.txt",row.names = F,append = T)
+write.table(n_platform,"E:\\Work_table\\gitwutb\\git_project\\yck_wash_car_model\\file\\output_final\\analysis_wide_table.txt",row.names = F,append = T)
