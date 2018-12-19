@@ -63,7 +63,7 @@ if(length(files_full)>=3){
 ##################第二部分（最终输出等待入库）：将match_id中的right数据放入宽表
 source(paste0("E:/Work_table/gitwutb/git_project/yck_wash_car_model","/main/analysis_wide_table/analysis_wide_table.R",sep=""),echo=TRUE,encoding="utf-8")
 library(RMySQL)
-if(length(unique(wutb$car_platform))>=3){
+if(length(unique(wutb$car_platform))>=1){
   loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
   dbSendQuery(loc_channel,'SET NAMES gbk')
   dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE '","E:/Work_table/gitwutb/git_project/yck_wash_car_model","/file/output_final/analysis_wide_table.csv'",

@@ -14,7 +14,6 @@ library(RMySQL)
 che58_city<- read.csv("E:\\Work_table\\gitwutb\\git_project\\yck_wash_car_model\\config\\config_file\\城市牌照.csv",header = T,sep = ",")
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
-table.name<-dbListTables(loc_channel)
 # field.name<-dbListFields(loc_channel,"")
 #data_new<-dbFetch(dbSendQuery(loc_channel,"SELECT MAX(date_add) FROM analysis_match_id a WHERE a.car_platform='guazi'"),-1)%>%as.character()
 data_new<-Sys.Date()%>%as.character()
@@ -68,7 +67,7 @@ if(nrow(input_orig)==0){
 #########################################################2222rrc###############################
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
-table.name<-dbListTables(loc_channel)
+
 # field.name<-dbListFields(loc_channel,"")
 input_orig<-dbFetch(dbSendQuery(loc_channel,paste0("SELECT m.car_platform,m.id_data_input,m.id_che300,p.model_year,m.brand,m.series,p.model_name,n.color,p.liter,p.auto,p.discharge_standard,p.car_level,n.location,n.regDate,n.quotes,p.model_price,n.mile,",
                                                    " n.state,'1' trans_fee,n.transfer,n.annual,n.high_insure insure,DATE_FORMAT(n.add_time,'%Y-%m-%d')  add_time,DATE_FORMAT(n.update_time,'%Y-%m-%d') update_time,n.address",
@@ -121,7 +120,7 @@ if(nrow(input_orig)==0){
 #########################################################3优信###############################
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
-table.name<-dbListTables(loc_channel)
+
 # field.name<-dbListFields(loc_channel,"")
 input_orig<-dbFetch(dbSendQuery(loc_channel,paste0("SELECT m.car_platform,m.id_data_input,m.id_che300,p.model_year,m.brand,m.series,p.model_name,n.color,p.liter,p.auto,p.discharge_standard,p.car_level,n.address location,n.regDate,n.quotes,p.model_price,n.mile,",
                                                    " n.state,'1' trans_fee,'' transfer,n.annual,n.insure,DATE_FORMAT(n.add_time,'%Y-%m-%d')  add_time,DATE_FORMAT(n.update_time,'%Y-%m-%d') update_time",
@@ -175,7 +174,7 @@ if(nrow(input_orig)==0){
 #####################################################44444车速拍###############################
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
-table.name<-dbListTables(loc_channel)
+
 # field.name<-dbListFields(loc_channel,"")
 input_orig<-dbFetch(dbSendQuery(loc_channel,paste0("SELECT m.car_platform,m.id_data_input,m.id_che300,p.model_year,m.brand,m.series,p.model_name,n.color,p.liter,p.auto,p.discharge_standard,p.car_level,n.location,n.regDate,n.quotes,p.model_price,n.mile,",
                                                    " n.state,'0' trans_fee,n.transfer,n.annual,n.high_insure insure,DATE_FORMAT(n.add_time,'%Y-%m-%d')  add_time,DATE_FORMAT(n.update_time,'%Y-%m-%d') update_time,n.address",
@@ -232,7 +231,7 @@ if(nrow(input_orig)==0){
 #####################################################55555瓜子###############################
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
-table.name<-dbListTables(loc_channel)
+
 # field.name<-dbListFields(loc_channel,"")
 input_orig<-dbFetch(dbSendQuery(loc_channel,paste0("SELECT m.car_platform,m.id_data_input,m.id_che300,p.model_year,m.brand,m.series,p.model_name,'-' color,p.liter,p.auto,p.discharge_standard,p.car_level,n.location,n.regDate,n.quotes,p.model_price,n.mile,",
                                                    " n.state,'0' trans_fee,n.transfer,n.annual,n.high_insure insure,DATE_FORMAT(n.add_time,'%Y-%m-%d')  add_time,DATE_FORMAT(n.update_time,'%Y-%m-%d') update_time,n.address",
@@ -306,7 +305,7 @@ if(nrow(input_orig)==0){
 #####################################################6666车58###############################
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
-table.name<-dbListTables(loc_channel)
+
 # field.name<-dbListFields(loc_channel,"")
 input_orig<-dbFetch(dbSendQuery(loc_channel,paste0("SELECT m.car_platform,m.id_data_input,m.id_che300,p.model_year,m.brand,m.series,p.model_name,n.color,p.liter,p.auto,p.discharge_standard,p.car_level,n.url location,n.regDate,n.quotes,p.model_price,n.mile,",
                                                    " '' state,n.trans_fee,'' transfer,n.annual,n.high_insure insure,DATE_FORMAT(n.add_time,'%Y-%m-%d')  add_time,DATE_FORMAT(n.update_time,'%Y-%m-%d') update_time",
@@ -368,7 +367,7 @@ if(nrow(input_orig)==0){
 #####################################################77777易车###############################
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
-table.name<-dbListTables(loc_channel)
+
 # field.name<-dbListFields(loc_channel,"")
 input_orig<-dbFetch(dbSendQuery(loc_channel,paste0("SELECT m.car_platform,m.id_data_input,m.id_che300,p.model_year,m.brand,m.series,p.model_name,'' color,p.liter,p.auto,p.discharge_standard,p.car_level,n.location,n.regDate,n.quotes,p.model_price,n.mile,",
                                                    " '' state,n.trans_fee,'' transfer,n.annual,insure,DATE_FORMAT(n.add_time,'%Y-%m-%d')  add_time,DATE_FORMAT(n.update_time,'%Y-%m-%d') update_time",
@@ -391,7 +390,7 @@ location_ls$regional[which(is.na(location_ls$regional))]<-
   as.character(left_join(location_ls[which(is.na(location_ls$regional)),],unique(config_distr[,1:2]),by="province")$regional.y)
 input_orig$location<-location_ls$city
 input_orig<-data.frame(input_orig,regional=location_ls$regional,province=location_ls$province)
-input_orig<-input_orig[-which(is.na(location_ls$regional)),]
+if(length(which(is.na(location_ls$regional)))>0){input_orig<-input_orig[-which(is.na(location_ls$regional)),]}
 ##########
 input_orig<-inner_join(input_orig,config_series_class,c("brand"="brand"))
 user_years<-round((as.Date(input_orig$add_time)-as.Date(input_orig$regDate))/365,2)
@@ -433,7 +432,7 @@ if(nrow(input_orig)==0){
 #####################################################88888车车置宝###############################
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
-table.name<-dbListTables(loc_channel)
+
 # field.name<-dbListFields(loc_channel,"")
 input_orig<-dbFetch(dbSendQuery(loc_channel,paste0("SELECT m.car_platform,m.id_data_input,m.id_che300,p.model_year,m.brand,m.series,p.model_name,'' color,p.liter,p.auto,p.discharge_standard,p.car_level,n.location,n.regDate,n.bid_price quotes,p.model_price,n.mile,",
                                                    " '' state,'' trans_fee,n.transfer,n.annual,'' insure,DATE_FORMAT(n.add_time,'%Y-%m-%d')  add_time,DATE_FORMAT(n.update_time,'%Y-%m-%d') update_time",
@@ -493,7 +492,7 @@ if(nrow(input_orig)==0){
 # #####################################################9999搜车###############################
 # loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 # dbSendQuery(loc_channel,'SET NAMES gbk')
-# table.name<-dbListTables(loc_channel)
+# 
 # input_orig<-dbFetch(dbSendQuery(loc_channel,paste0("SELECT m.car_platform,m.id_data_input,m.id_che300,p.model_year,m.brand,m.series,p.model_name,n.color,p.liter,p.auto,p.discharge_standard,p.car_level,n.location,n.regDate,n.quotes,p.model_price,n.mile,",
 #                                                    " '' state,'' trans_fee,'' transfer,'' annual,'' insure,DATE_FORMAT(n.add_time,'%Y-%m-%d')  add_time,DATE_FORMAT(n.update_time,'%Y-%m-%d') update_time",
 #                                                    " FROM (SELECT car_platform,id_data_input,id_che300,brand,series FROM analysis_match_id where car_platform='souche' AND match_des='right' AND date_add='",data_new,"') m",
@@ -548,6 +547,7 @@ if(nrow(input_orig)==0){
 ###清洗为NA
 wutb$annual[which(is.na(wutb$annual))]<-''
 wutb$transfer[which(is.na(wutb$transfer))]<-''
+wutb$transfer<-gusb('.*数据','',wutb$transfer)
 wutb$insure[which(is.na(wutb$insure))]<-''
 wutb$state[which(is.na(wutb$state))]<-''
 
