@@ -7,6 +7,7 @@ library(raster)
 #help(package="dplyr")
 #读取数据
 library(RMySQL)
+file_dir<-gsub("\\/bat|\\/main\\/.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
 table.name<-dbListTables(loc_channel)
@@ -14,11 +15,11 @@ table.name<-dbListTables(loc_channel)
 yck_czb<-dbFetch(dbSendQuery(loc_channel,"SELECT id car_id,brand brand_name,series series_name,model model_name,emission discharge_standard,displacement liter FROM spider_www_273 a;"),-1)
 rm_series_rule<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM config_reg_series_rule;"),-1)
 dbDisconnect(loc_channel)
-rm_rule<- read.csv("E:\\Work_table\\Study\\Rexam\\YCK\\yck_wash_car_model\\config\\config_file\\reg_rule.csv",header = T,sep = ",")
-out_rrc<- read.csv("E:\\Work_table\\Study\\Rexam\\YCK\\yck_wash_car_model\\config\\config_file\\out_rrc.csv",header = T,sep = ",")
-che300<- read.csv("E:\\Work_table\\Study\\Rexam\\YCK\\yck_wash_car_model\\config\\config_file\\qx_che300.csv",header = T,sep = ",")
-source("E:\\Work_table\\Study\\Rexam\\YCK\\yck_wash_car_model\\config\\config_fun\\fun_stopWords.R",echo=TRUE,encoding="utf-8")
-source("E:\\Work_table\\Study\\Rexam\\YCK\\yck_wash_car_model\\config\\config_fun\\fun_normalization.R",echo=TRUE,encoding="utf-8")
+rm_rule<- read.csv(paste0(file_dir,"/config/config_file/reg_rule.csv",sep=""),header = T,sep = ",")
+out_rrc<- read.csv(paste0(file_dir,"/config/config_file/out_rrc.csv",sep=""),header = T,sep = ",")
+che300<- read.csv(paste0(file_dir,"/config/config_file/qx_che300.csv",sep=""),header = T,sep = ",")
+source(paste0(file_dir,"/config/config_fun/fun_stopWords.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(file_dir,"/config/config_fun/fun_normalization.R",sep=""),echo=TRUE,encoding="utf-8")
 yck_czb<-data.frame(yck_czb,model_price="",car_auto="")
 
 
@@ -171,9 +172,9 @@ qx_czb<-data.frame(qx_czb)
 qx_czb$X<-as.integer(as.character(qx_czb$X))
 #########################################################################################################
 ##################################################第二大章：数据匹配#####################################
-source("E:\\Work_table\\Study\\Rexam\\YCK\\yck_wash_car_model\\config\\config_fun\\fun_match.R",echo=TRUE,encoding="utf-8")
-source("E:\\Work_table\\Study\\Rexam\\YCK\\yck_wash_car_model\\config\\config_fun\\fun_iteration.R",echo=TRUE,encoding="utf-8")
-source("E:\\Work_table\\Study\\Rexam\\YCK\\yck_wash_car_model\\config\\config_fun\\fun_match_result_czb.R",echo=TRUE,encoding="utf-8")
+source(paste0(file_dir,"/config/config_fun/fun_match.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(file_dir,"/config/config_fun/fun_iteration.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(file_dir,"/config/config_fun/fun_match_result_czb.R",sep=""),echo=TRUE,encoding="utf-8")
 data_input<-qx_czb
 ##调用函数计算结果列表
 list_result<-fun_match_result_czb(che300,qx_czb)
@@ -184,6 +185,6 @@ match_repeat<-list_result$match_repeat
 match_not<-list_result$match_not
 return_db<-data.frame(car_platform="czb",return_db)
 return_db$id_che300<-as.integer(as.character(return_db$id_che300))
-write.csv(return_db,"E:\\Work_table\\Study\\Rexam\\YCK\\yck_wash_car_model\\file\\output\\czb.csv",row.names = F)
+write.csv(return_db,paste0(file_dir,"/file/output/czb.csv",sep=""),row.names = F)
 write.table(data.frame(platform=unique(return_db$car_platform),accurate=round(accurate[2]/(accurate[1]+accurate[2]),3),n_right=nrow(match_right),n_repeat=nrow(match_repeat),n_not=nrow(match_not)),
-            "E:\\Work_table\\Study\\Rexam\\YCK\\yck_wash_car_model\\file\\output\\rizhi.txt",row.names = F,append=T)
+            paste0(file_dir,"/file/output/rizhi.txt",sep=""),row.names = F,append=T)

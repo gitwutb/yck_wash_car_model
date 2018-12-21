@@ -7,7 +7,7 @@ library(raster)
 #help(package="dplyr")
 #读取数据
 library(RMySQL)
-deep_local<-c("E:\\Work_table\\gitwutb\\git_project\\")
+deep_local<-gsub("\\/bat|\\/main\\/.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
 table.name<-dbListTables(loc_channel)
@@ -15,15 +15,15 @@ table.name<-dbListTables(loc_channel)
 yck_yiche<-dbFetch(dbSendQuery(loc_channel,"SELECT id car_id,brand brand_name,series series_name,model model_name,msrp model_price FROM spider_www_yiche a 
                                INNER JOIN (SELECT a.id_data_input FROM analysis_match_id a where a.car_platform='yiche' AND a.match_des='not') m ON a.id=m.id_data_input;"),-1)
 dbDisconnect(loc_channel)
-rm_rule<- read.csv(paste0(deep_local,"yck_wash_car_model\\config\\config_file\\reg_rule.csv",sep=""),header = T,sep = ",")
-rm_series_rule<- read.csv(paste0(deep_local,"yck_wash_car_model\\config\\config_file\\reg_series_rule.csv",sep=""),header = T,sep = ",")
-out_rrc<- read.csv(paste0(deep_local,"yck_wash_car_model\\config\\config_file\\out_rrc.csv",sep=""),header = T,sep = ",")
+rm_rule<- read.csv(paste0(deep_local,"\\config\\config_file\\reg_rule.csv",sep=""),header = T,sep = ",")
+rm_series_rule<- read.csv(paste0(deep_local,"\\config\\config_file\\reg_series_rule.csv",sep=""),header = T,sep = ",")
+out_rrc<- read.csv(paste0(deep_local,"\\config\\config_file\\out_rrc.csv",sep=""),header = T,sep = ",")
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
 che300<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM analysis_che300_cofig_info;"),-1)
 dbDisconnect(loc_channel)
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_stopWords.R",sep=""),echo=TRUE,encoding="utf-8")
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_normalization.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(deep_local,"\\config\\config_fun\\fun_stopWords.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(deep_local,"\\config\\config_fun\\fun_normalization.R",sep=""),echo=TRUE,encoding="utf-8")
 
 ######################------第一部分：得到车的品牌及车系-------#################
 ##临时车名
@@ -196,9 +196,9 @@ qx_yiche$X<-as.integer(as.character(qx_yiche$X))
 data_input<-qx_yiche
 #########################################################################################################
 ##################################################第二大章：数据匹配#####################################
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_match.R",sep=""),echo=TRUE,encoding="utf-8")
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_iteration.R",sep=""),echo=TRUE,encoding="utf-8")
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_match_result_yiche.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(deep_local,"\\config\\config_fun\\fun_match.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(deep_local,"\\config\\config_fun\\fun_iteration.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(deep_local,"\\config\\config_fun\\fun_match_result_yiche.R",sep=""),echo=TRUE,encoding="utf-8")
 ##调用函数计算结果列表
 list_result<-fun_match_result_yiche(che300,qx_yiche)
 confidence<-list_result$confidence
@@ -208,7 +208,7 @@ match_repeat<-list_result$match_repeat
 match_not<-list_result$match_not
 return_db<-data.frame(car_platform="yiche",return_db)
 return_db$id_che300<-as.integer(as.character(return_db$id_che300))
-write.csv(return_db,paste0(deep_local,"yck_wash_car_model\\file\\output\\yiche_not.csv",sep=""),row.names = F)
+write.csv(return_db,paste0(deep_local,"\\file\\output\\yiche_not.csv",sep=""),row.names = F)
 ###日志文件
 rizhi<-data.frame(platform=unique(return_db$car_platform),
                   accurate=round(accurate[2]/(accurate[1]+accurate[2]),3),

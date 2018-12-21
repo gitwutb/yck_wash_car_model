@@ -8,7 +8,7 @@ library(raster)
 #读取数据
 library(RMySQL)
 #deep_local<-gsub("\\/config.*","",dirname(rstudioapi::getActiveDocumentContext()$path))
-deep_local<-c("E:/Work_table/gitwutb/git_project/yck_wash_car_model")
+deep_local<-gsub("\\/bat|\\/config\\/.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
 # field.name<-dbListFields(loc_channel,"")

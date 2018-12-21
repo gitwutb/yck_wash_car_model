@@ -7,7 +7,7 @@ library(raster)
 #help(package="dplyr")
 #读取数据
 library(RMySQL)
-deep_local<-c("E:\\Work_table\\gitwutb\\git_project\\")
+deep_local<-gsub("\\/bat|\\/main\\/.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
 table.name<-dbListTables(loc_channel)
@@ -15,16 +15,16 @@ table.name<-dbListTables(loc_channel)
 yck_che58<-dbFetch(dbSendQuery(loc_channel,"SELECT id car_id,model model_name,emission discharge_standard,gearbox car_auto FROM spider_www_58 a
                                INNER JOIN (SELECT a.id_data_input FROM analysis_match_id a where a.car_platform='che58' AND a.match_des='not') m ON a.id=m.id_data_input;"),-1)
 dbDisconnect(loc_channel)
-rm_rule<- read.csv(paste0(deep_local,"yck_wash_car_model\\config\\config_file\\reg_rule.csv",sep=""),header = T,sep = ",")
-rm_series_rule<- read.csv(paste0(deep_local,"yck_wash_car_model\\config\\config_file\\reg_series_rule.csv",sep=""),header = T,sep = ",")
-out_rrc<- read.csv(paste0(deep_local,"yck_wash_car_model\\config\\config_file\\out_rrc.csv",sep=""),header = T,sep = ",")
+rm_rule<- read.csv(paste0(deep_local,"\\config\\config_file\\reg_rule.csv",sep=""),header = T,sep = ",")
+rm_series_rule<- read.csv(paste0(deep_local,"\\config\\config_file\\reg_series_rule.csv",sep=""),header = T,sep = ",")
+out_rrc<- read.csv(paste0(deep_local,"\\config\\config_file\\out_rrc.csv",sep=""),header = T,sep = ",")
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
 che300<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM analysis_che300_cofig_info;"),-1)
 dbDisconnect(loc_channel)
-rm_che58<- read.csv(paste0(deep_local,"yck_wash_car_model\\config\\config_file\\reg_che58.csv",sep=""),header = T,sep = ",")
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_stopWords.R",sep=""),echo=TRUE,encoding="utf-8")
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_normalization.R",sep=""),echo=TRUE,encoding="utf-8")
+rm_che58<- read.csv(paste0(deep_local,"\\config\\config_file\\reg_che58.csv",sep=""),header = T,sep = ",")
+source(paste0(deep_local,"\\config\\config_fun\\fun_stopWords.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(deep_local,"\\config\\config_fun\\fun_normalization.R",sep=""),echo=TRUE,encoding="utf-8")
 yck_che58<-data.frame(car_id=yck_che58$car_id,brand_name="",series_name="",yck_che58[,-1],model_price="")
 yck_che58$discharge_standard<-gsub("\\(.*","",yck_che58$discharge_standard)
 yck_che58$model_name[grep("双离合|G-DCT|DCT|DSG",yck_che58$car_auto)]<-
@@ -198,7 +198,7 @@ qx_name<-unlist(lapply(1:length(car_series1),forFun))
 
 ##--------------------停用词清洗--------------------
 ####################################################CROSS
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_stopWords_che58.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(deep_local,"\\config\\config_fun\\fun_stopWords_che58.R",sep=""),echo=TRUE,encoding="utf-8")
 ###-------词语描述归一-----
 output_data<-fun_stopWords_che58(data_input,qx_name)
 #------------------数据保存----------------
@@ -215,9 +215,9 @@ qx_che58<-data.frame(qx_che58)
 qx_che58$X<-as.integer(as.character(qx_che58$X))
 #########################################################################################################
 ##################################################第二大章：数据匹配#####################################
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_match.R",sep=""),echo=TRUE,encoding="utf-8")
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_iteration.R",sep=""),echo=TRUE,encoding="utf-8")
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_match_result.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(deep_local,"\\config\\config_fun\\fun_match.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(deep_local,"\\config\\config_fun\\fun_iteration.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(deep_local,"\\config\\config_fun\\fun_match_result.R",sep=""),echo=TRUE,encoding="utf-8")
 data_input<-qx_che58
 ##调用函数计算结果列表
 list_result<-fun_match_result(che300,qx_che58)
@@ -313,7 +313,7 @@ qx_name<-unlist(lapply(1:length(car_series1),forFun))
 ##--------------------停用词清洗--------------------
 ####################################################CROSS
 ###-------词语描述归一-----
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_stopWords_che58.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(deep_local,"\\config\\config_fun\\fun_stopWords_che58.R",sep=""),echo=TRUE,encoding="utf-8")
 output_data<-fun_stopWords_che58(data_input,qx_name)
 #------------------数据保存----------------
 qx_che58<-data.frame(X=data_input_se$car_id,output_data)
@@ -329,9 +329,9 @@ qx_che58<-data.frame(qx_che58)
 qx_che58$X<-as.integer(as.character(qx_che58$X))
 #########################################################################################################
 ##################################################第二大章：数据匹配#####################################
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_match.R",sep=""),echo=TRUE,encoding="utf-8")
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_iteration.R",sep=""),echo=TRUE,encoding="utf-8")
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_match_result.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(deep_local,"\\config\\config_fun\\fun_match.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(deep_local,"\\config\\config_fun\\fun_iteration.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(deep_local,"\\config\\config_fun\\fun_match_result.R",sep=""),echo=TRUE,encoding="utf-8")
 data_input<-qx_che58
 ##调用函数计算结果列表
 list_result<-fun_match_result(che300,qx_che58)
@@ -345,7 +345,7 @@ return_db$id_che300<-as.integer(as.character(return_db$id_che300))
 ##
 wutb_right<-data.frame(car_platform="che58",wutb_right)
 return_db<-rbind(wutb_right,return_db)
-write.csv(return_db,paste0(deep_local,"yck_wash_car_model\\file\\output\\che58_not.csv",sep=""),row.names = F)
+write.csv(return_db,paste0(deep_local,"\\file\\output\\che58_not.csv",sep=""),row.names = F)
 ###日志文件
 rizhi<-data.frame(platform=unique(return_db$car_platform),
                   accurate=round(accurate[2]/(accurate[1]+accurate[2]),3),

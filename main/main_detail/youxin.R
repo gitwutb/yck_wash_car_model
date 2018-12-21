@@ -1,4 +1,4 @@
-#清除缓存YCK\\yck_wash_car_model\\config\\config_fun
+#清除缓存YCK\\\\config\\config_fun
 rm(list = ls(all=T))
 gc()
 library(dplyr)
@@ -7,7 +7,7 @@ library(raster)
 #help(package="dplyr")
 #读取数据
 library(RMySQL)
-deep_local<-c("E:\\Work_table\\gitwutb\\git_project\\")
+deep_local<-gsub("\\/bat|\\/main\\/.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
 table.name<-dbListTables(loc_channel)
@@ -17,10 +17,10 @@ yck_youxin<-dbFetch(dbSendQuery(loc_channel,"SELECT id car_id,model model_name,e
 rm_series_rule<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM config_reg_series_rule;"),-1)
 che300<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM analysis_che300_cofig_info;"),-1)
 dbDisconnect(loc_channel)
-rm_rule<- read.csv(paste0(deep_local,"yck_wash_car_model\\config\\config_file\\reg_rule.csv",sep=""),header = T,sep = ",")
-out_rrc<- read.csv(paste0(deep_local,"yck_wash_car_model\\config\\config_file\\out_rrc.csv",sep=""),header = T,sep = ",")
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_stopWords.R",sep=""),echo=TRUE,encoding="utf-8")
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_normalization.R",sep=""),echo=TRUE,encoding="utf-8")
+rm_rule<- read.csv(paste0(deep_local,"\\config\\config_file\\reg_rule.csv",sep=""),header = T,sep = ",")
+out_rrc<- read.csv(paste0(deep_local,"\\config\\config_file\\out_rrc.csv",sep=""),header = T,sep = ",")
+source(paste0(deep_local,"\\config\\config_fun\\fun_stopWords.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(deep_local,"\\config\\config_fun\\fun_normalization.R",sep=""),echo=TRUE,encoding="utf-8")
 yck_youxin<-data.frame(car_id=yck_youxin$car_id,brand_name="",series_name="",yck_youxin[,-1],model_price="")
 yck_youxin$discharge_standard<-gsub("\\(.*","",yck_youxin$discharge_standard)
 yck_youxin$model_name[grep("双离合|G-DCT|DCT|DSG",yck_youxin$car_auto)]<-
@@ -211,9 +211,9 @@ qx_youxin<-data.frame(qx_youxin)
 qx_youxin$X<-as.integer(as.character(qx_youxin$X))
 #########################################################################################################
 ##################################################第二大章：数据匹配#####################################
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_match.R",sep=""),echo=TRUE,encoding="utf-8")
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_iteration.R",sep=""),echo=TRUE,encoding="utf-8")
-source(paste0(deep_local,"yck_wash_car_model\\config\\config_fun\\fun_match_result.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(deep_local,"\\config\\config_fun\\fun_match.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(deep_local,"\\config\\config_fun\\fun_iteration.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(deep_local,"\\config\\config_fun\\fun_match_result.R",sep=""),echo=TRUE,encoding="utf-8")
 data_input<-qx_youxin
 ##调用函数计算结果列表
 list_result<-fun_match_result(che300,qx_youxin)
@@ -224,7 +224,7 @@ match_repeat<-list_result$match_repeat
 match_not<-list_result$match_not
 return_db<-data.frame(car_platform="youxin",return_db)
 return_db$id_che300<-as.integer(as.character(return_db$id_che300))
-write.csv(return_db,paste0(deep_local,"yck_wash_car_model\\file\\output\\youxin.csv",sep=""),row.names = F)
+write.csv(return_db,paste0(deep_local,"\\file\\output\\youxin.csv",sep=""),row.names = F)
 #########################################################################
 ###日志文件
 rizhi<-data.frame(platform=unique(return_db$car_platform),

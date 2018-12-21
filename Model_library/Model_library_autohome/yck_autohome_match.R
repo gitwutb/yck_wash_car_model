@@ -11,7 +11,7 @@ library(e1071)
 library(tcltk)
 library(lubridate)
 #######################第一步：获取匹配信息###############
-file_path<-c("E:/Work_table/gitwutb/git_project/yck_wash_car_model/Model_library/Model_library_autohome")
+file_path<-gsub("\\/bat|\\/main|\\/Model_library.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
 yck1<-dbFetch(dbSendQuery(loc_channel,"select model_id autohome_id,brand_letter mark,brand_name brand,series_name series,`status` is_selling,CONCAT(series_name,' ',model_name) type_name,
@@ -83,11 +83,11 @@ yck$environmental_standards<-gsub("6|VI|Ⅵ","六",yck$environmental_standards)
 yck$environmental_standards<-gsub("5|V","五",yck$environmental_standards)
 yck$environmental_standards<-gsub("\\(","\\/",yck$environmental_standards)
 
-write.csv(yck,paste0(file_path,"/yck_detail.csv"),
+write.csv(yck,paste0(file_path,"/Model_library/Model_library_autohome/yck_detail.csv"),
           row.names = F,fileEncoding = "UTF-8",quote = F)
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck")
 dbSendQuery(loc_channel,'SET NAMES gbk')
-dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE ","'",paste0(file_path,"/yck_detail.csv"),"'",
+dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE ","'",paste0(file_path,"/Model_library/Model_library_autohome/yck_detail.csv"),"'",
                                " INTO TABLE yck_car_basic_config CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;"))
 dbDisconnect(loc_channel)
 
@@ -101,13 +101,13 @@ dbSendQuery(loc_channel,"UPDATE yck.yck_car_basic_config a,`yck-data-center`.con
 bf_yck<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM yck_car_basic_config;"),-1)
 dbDisconnect(loc_channel)
 bf_yck$autohome_id[which(is.na(bf_yck$autohome_id))]<-''
-write.csv(bf_yck,paste0(file_path,"/bf_yck.csv"),
+write.csv(bf_yck,paste0(file_path,"/Model_library/Model_library_autohome/bf_yck.csv"),
           row.names = F,fileEncoding = "UTF-8",quote = F)
 
 loc_channel<-dbConnect(MySQL(),user = "data",host="youcku.com",password= "9jl3Jjkl",dbname="yck")
 dbSendQuery(loc_channel,'SET NAMES gbk')
 dbSendQuery(loc_channel,"TRUNCATE TABLE yck_car_basic_config")
-dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE ","'",paste0(file_path,"/bf_yck.csv"),"'",
+dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE ","'",paste0(file_path,"/Model_library/Model_library_autohome/bf_yck.csv"),"'",
                                " INTO TABLE yck_car_basic_config CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;"))
 dbSendQuery(loc_channel,"UPDATE yck_car_basic_config SET autohome_id=NULL WHERE autohome_id=0")
 dbDisconnect(loc_channel)

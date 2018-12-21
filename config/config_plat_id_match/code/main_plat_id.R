@@ -8,13 +8,12 @@ library(raster)
 #读取数据
 library(RMySQL)
 #deep_local<-gsub("\\/config.*","",dirname(rstudioapi::getActiveDocumentContext()$path))
-deep_local<-c("E:/Work_table/gitwutb/git_project/yck_wash_car_model")
-
+deep_local<-gsub("\\/bat|\\/config\\/.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
 car_platform<-c('plat_id_yiche.R','plat_id_czb.R','plat_id_autohome.R','plat_id_souhu.R')
 for (i in 1:length(car_platform)) {
-  tryCatch({source(paste0(paste0("E:/Work_table/gitwutb/git_project/yck_wash_car_model","\\config\\config_plat_id_match\\code\\",sep=""),car_platform[i],sep=""),echo=TRUE,encoding="utf-8")},
+  tryCatch({source(paste0(tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}),'/',car_platform[i],sep=""),echo=TRUE,encoding="utf-8")},
            error=function(e){cat(write.table(data.frame(platform=paste0('iserror'),data=Sys.Date()),
-                                             paste0("E:/Work_table/gitwutb/git_project/yck_wash_car_model","\\config\\config_plat_id_match\\code\\p_error.txt",sep=""),col.names = F,row.names = F,append=T),conditionMessage(e),"\n\n")},
+                                             paste0(tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}),"/p_error.txt",sep=""),col.names = F,row.names = F,append=T),conditionMessage(e),"\n\n")},
            finally={print(paste0("进程完成!"))})
   car_platform<-c('plat_id_yiche.R','plat_id_czb.R','plat_id_autohome.R','plat_id_souhu.R')
 }
@@ -40,6 +39,6 @@ write.csv(id_result,paste0(deep_local,"\\config\\config_plat_id_match\\id_result
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
 dbSendQuery(loc_channel,"TRUNCATE config_plat_id_match")
-dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE '","E:/Work_table/gitwutb/git_project/yck_wash_car_model","/config/config_plat_id_match/id_result.csv'",
+dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE '",gsub("\\/config\\/.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()})),"/config/config_plat_id_match/id_result.csv'",
                                " INTO TABLE config_plat_id_match CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;",sep=""))
 dbDisconnect(loc_channel)

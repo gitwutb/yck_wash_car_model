@@ -11,7 +11,8 @@ library(ggplot2)
 #help(package="dplyr")
 #读取数据
 library(RMySQL)
-che58_city<- read.csv("E:\\Work_table\\gitwutb\\git_project\\yck_wash_car_model\\config\\config_file\\城市牌照.csv",header = T,sep = ",")
+file_dir<-gsub("\\/bat|\\/main\\/.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
+che58_city<- read.csv(paste0(file_dir,"/config/config_file/城市牌照.csv",sep=""),header = T,sep = ",")
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
 # field.name<-dbListFields(loc_channel,"")
@@ -547,9 +548,12 @@ if(nrow(input_orig)==0){
 ###清洗为NA
 wutb$annual[which(is.na(wutb$annual))]<-''
 wutb$transfer[which(is.na(wutb$transfer))]<-''
-wutb$transfer<-gusb('.*数据','',wutb$transfer)
 wutb$insure[which(is.na(wutb$insure))]<-''
 wutb$state[which(is.na(wutb$state))]<-''
+wutb$transfer<-gsub('.*数据|NA','',wutb$transfer)
+wutb$annual<-gsub('NA','',wutb$annual)
+wutb$insure<-gsub('NA','',wutb$insure)
+wutb$state<-gsub('NA','',wutb$state)
 
 #清洗color
 wutb$color<-gsub("――|-|无数据|null|[0-9]","",wutb$color)
@@ -557,9 +561,9 @@ wutb$color<-gsub("其他","其它",wutb$color)
 wutb$color<-gsub("色","",wutb$color)
 wutb$color<-gsub("浅|深|象牙|冰川","",wutb$color)
 wutb<-data.frame(wutb,date_add=format(Sys.time(),'%Y-%m-%d'))
-write.csv(wutb,"E:\\Work_table\\gitwutb\\git_project\\yck_wash_car_model\\file\\output_final\\analysis_wide_table.csv",
+write.csv(wutb,paste0(file_dir,"/file/output_final/analysis_wide_table.csv",sep=""),
           row.names = F,fileEncoding = "UTF-8",quote = F)
 
 ##日志文件
 n_platform<-data.frame(n_platform,date=Sys.time())
-write.table(n_platform,"E:\\Work_table\\gitwutb\\git_project\\yck_wash_car_model\\file\\output_final\\analysis_wide_table.txt",row.names = F,append = T)
+write.table(n_platform,paste0(file_dir,"/file/output_final/analysis_wide_table.txt",sep=""),row.names = F,append = T)
