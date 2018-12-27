@@ -15,6 +15,7 @@ fun_stopWords<-function(data_input,qx_name){
   ##获取奔驰数字串
   linshi<-str_extract(car_series1,"奔驰.*")
   linshi[grep("奔驰",car_series1)]<-str_extract(qx_name[grep("奔驰",car_series1)],"[0-9]{3}|[0-9]{2}")
+  linshi[which(is.na(linshi))]<-""
   linshi[-grep("",linshi)]<-""
   benchi<-paste(benchi,linshi,sep = "")
   #清除数字

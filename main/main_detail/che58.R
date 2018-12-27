@@ -7,7 +7,7 @@ library(raster)
 #help(package="dplyr")
 #读取数据
 library(RMySQL)
-deep_local<-gsub("\\/bat|\\/main\\/.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
+deep_local<-gsub("\\/bat|\\/main.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
 table.name<-dbListTables(loc_channel)
@@ -347,10 +347,10 @@ write.csv(return_db,paste0(deep_local,"\\file\\output\\che58.csv",sep=""),row.na
 ###日志文件
 rizhi<-data.frame(platform=unique(return_db$car_platform),
                   accurate=round(accurate[2]/(accurate[1]+accurate[2]),3),
-                  n_right=nrow(match_right),n_repeat=nrow(match_repeat),
-                  n_not=nrow(match_not),add_date=Sys.Date())
+                  n_right=length(which(return_db$match_des=='right')),n_repeat=length(which(return_db$match_des=='repeat')),
+                  n_not=length(which(return_db$match_des=='not')),add_date=Sys.Date())
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
-dbWriteTable(loc_channel,"analysis_match_id_tab",rizhi,append=T,row.names=F)
+dbWriteTable(loc_channel,"log_analysis_match_id",rizhi,append=T,row.names=F)
 dbDisconnect(loc_channel)
 #######################################################################

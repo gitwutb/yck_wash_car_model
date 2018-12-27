@@ -14,8 +14,7 @@ file.remove(lf)
 car_platform<-c('rrc.R','che168.R','csp.R','che58.R','guazi.R','youxin.R','czb.R','yiche.R')
 for (i in 1:length(car_platform)) {
   tryCatch({source(paste0(paste0(gsub("\\/main|\\/bat","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()})),"/main/main_detail/",sep=""),car_platform[i],sep=""),echo=TRUE,encoding="utf-8")},
-           error=function(e){cat(write.table(data.frame(platform=paste0('iserror'),data=Sys.Date()),
-                                         paste0(gsub("\\/main|\\/bat","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()})),"/file/output/rizhi_error.txt",sep=""),col.names = F,row.names = F,append=T),conditionMessage(e),"\n\n")},
+           error=function(e){print(paste0("错误!"))},
            finally={print(paste0("进程完成!"))})
   car_platform<-c('rrc.R','che168.R','csp.R','che58.R','guazi.R','youxin.R','czb.R','yiche.R')
 }

@@ -11,7 +11,7 @@ library(ggplot2)
 #help(package="dplyr")
 #读取数据
 library(RMySQL)
-file_dir<-gsub("\\/bat|\\/main\\/.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
+file_dir<-gsub("\\/bat|\\/main.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
 che58_city<- read.csv(paste0(file_dir,"/config/config_file/城市牌照.csv",sep=""),header = T,sep = ",")
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')

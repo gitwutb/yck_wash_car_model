@@ -6,7 +6,7 @@ library(raster)
 #help(package="dplyr")
 #读取数据
 library(RMySQL)
-deep_local<-gsub("\\/bat|\\/main\\/.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
+deep_local<-gsub("\\/bat|\\/main.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
 table.name<-dbListTables(loc_channel)
@@ -92,12 +92,16 @@ a3<-inner_join(a3,rm_series_rule,c("series_t"="series_t"))%>%
   dplyr::select(car_id,brand_name,series_name,model_name,model_price,id,name,series,qx_series_all,discharge_standard,car_auto)
 ##-----------------第四步：未匹配上a4-----------########
 a4<-data.frame(car_id=setdiff(input_test1$car_id,a3$car_id))
-a4<-data.frame(inner_join(a4,input_test1,c("car_id"="car_id")),id="",name="",series="",qx_series_all="")
-a4$name<-a4$brand_name
-a4$series<-a4$series_name
+if(nrow(a4)==0){
+  data_input_0<-rbind(a1,a2,a3)
+}else{
+  a4<-data.frame(inner_join(a4,input_test1,c("car_id"="car_id")),id="",name="",series="",qx_series_all="")
+  a4$name<-a4$brand_name
+  a4$series<-a4$series_name
+  data_input_0<-rbind(a1,a2,a3,a4)
+}
 
 ########----组合所有car_id---###########
-data_input_0<-rbind(a1,a2,a3,a4)
 data_input_0<-inner_join(data_input_0,yck_csp[,c("car_id","brand_name","series_name","model_name")],by="car_id")%>%
   dplyr::select(car_id,brand_name=name,series_name=series,model_name=model_name.y,model_price,qx_series_all,discharge_standard,auto=car_auto)
 data_input_0$model_name<-toupper(data_input_0$model_name)
@@ -212,7 +216,7 @@ rizhi<-data.frame(platform=unique(return_db$car_platform),
                   n_not=nrow(match_not),add_date=Sys.Date())
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
-dbWriteTable(loc_channel,"analysis_match_id_tab",rizhi,append=T,row.names=F)
+dbWriteTable(loc_channel,"log_analysis_match_id",rizhi,append=T,row.names=F)
 dbDisconnect(loc_channel)
 #########################################################################
 #######################################################################
