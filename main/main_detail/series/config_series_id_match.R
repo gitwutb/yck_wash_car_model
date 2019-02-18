@@ -1,3 +1,4 @@
+##搜狐汽车车系与车300车系ID匹配add（main_che300处理之后执行）
 rm(list = ls(all=T))
 gc()
 library(dplyr)
@@ -9,26 +10,33 @@ library(RMySQL)
 deep_local<-gsub("\\/bat|\\/main.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
-table.name<-dbListTables(loc_channel)
-# field.name<-dbListFields(loc_channel,"")
-yck_che168<-dbFetch(dbSendQuery(loc_channel,"SELECT id car_id,brand brand_name,series series_name,model model_name,quotes model_price,gearbox car_auto FROM spider_www_168 a
-                                WHERE a.id>(SELECT MAX(id_data_input) FROM analysis_match_id WHERE car_platform in ('che168'));"),-1)
+yck_czw12365<-dbFetch(dbSendQuery(loc_channel,"SELECT model_id car_id,brand_name,series_name,CONCAT(brand_name,series_name) model_name,model_price,series_id car_auto,series_id FROM config_souhu_major_info;"),-1)
+id_match<-dbFetch(dbSendQuery(loc_channel,"SELECT DISTINCT id_souhu model_id FROM config_plat_id_match WHERE id_souhu!=0;"),-1)
+id_match1<-dbFetch(dbSendQuery(loc_channel,"SELECT DISTINCT c.series_id series_id_sohu FROM config_plat_id_match a 
+                          INNER JOIN config_che300_major_info b ON a.id_che300=b.model_id
+                          INNER JOIN config_souhu_major_info c ON a.id_souhu=c.model_id
+                          WHERE id_souhu!=0
+                          UNION SELECT DISTINCT series_id_sohu FROM config_series_id_match;"),-1)
 rm_series_rule<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM config_reg_series_rule;"),-1)
 che300<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM analysis_che300_cofig_info;"),-1)
+config_series_levels<-dbFetch(dbSendQuery(loc_channel,"SELECT DISTINCT brand_c300,series_c300,series_id_c300 FROM config_series_levels;"),-1)
 dbDisconnect(loc_channel)
-rm_rule<- read.csv(paste0(deep_local,"\\config\\config_file\\reg_rule.csv",sep=""),header = T,sep = ",")
-out_rrc<- read.csv(paste0(deep_local,"\\config\\config_file\\out_rrc.csv",sep=""),header = T,sep = ",")
+yck_not_have<-data.frame(car_id=setdiff(yck_czw12365$car_id,id_match$model_id))
+yck_czw12365<-merge(yck_czw12365,yck_not_have,by="car_id")
+yck_not_have<-data.frame(series_id=setdiff(unique(yck_czw12365$series_id),id_match1$series_id_sohu))
+yck_czw12365<-merge(yck_czw12365,yck_not_have,by="series_id") %>% dplyr::select(-series_id)
 source(paste0(deep_local,"\\config\\config_fun\\fun_stopWords.R",sep=""),echo=TRUE,encoding="utf-8")
 source(paste0(deep_local,"\\config\\config_fun\\fun_normalization.R",sep=""),echo=TRUE,encoding="utf-8")
 
-
 ######################------第一部分：得到车的品牌及车系-------#################
 ##临时车名
-input_test1<-yck_che168
+input_test1<-yck_czw12365
 input_test1$brand_name<-gsub(" ","",input_test1$brand_name)
 input_test1$series_name<-gsub(" ","",input_test1$series_name)
 input_test1$model_name<-gsub(" ","",input_test1$model_name)
 #input_test1清洗
+input_test1$series_name<-gsub("III|Ⅲ","-3",input_test1$series_name)
+input_test1$series_name<-gsub("Ⅱ|II","-2",input_test1$series_name)
 input_test1$brand_name<-fun_normalization(input_test1$brand_name)
 input_test1$series_name<-fun_normalization(input_test1$series_name)
 input_test1$model_name<-fun_normalization(input_test1$model_name)
@@ -40,7 +48,7 @@ rm_series_rule$series<-as.character(rm_series_rule$series)
 
 ###input_test2<-input_test1    input_test1<-input_test2
 ###----------------前期准备：提取准确的brand和series-----------
-brand_name<-str_extract(input_test1$brand_name,c(str_c(unique(rm_series_rule$rule_name),sep="",collapse = "|")))
+brand_name<-str_extract(input_test1$brand_name,c(str_c(rm_series_rule$rule_name,sep="",collapse = "|")))
 brand_name[which(is.na(brand_name))]<-input_test1$brand_name[which(is.na(brand_name))]
 linshi_series<-c(str_c(rm_series_rule$rule_series,sep="",collapse = "|"))
 series_name<-str_extract(input_test1$model_name,gsub(" ","",linshi_series))
@@ -99,99 +107,23 @@ if(nrow(a4)==0){
   a4$series<-a4$series_name
   data_input_0<-rbind(a1,a2,a3,a4)
 }
-
 ########----组合所有car_id---###########
-data_input_0<-inner_join(data_input_0,yck_che168[,c("car_id","brand_name","series_name","model_name")],by="car_id")%>%
-  dplyr::select(car_id,brand_name=name,series_name=series,model_name=model_name.y,model_price,qx_series_all,auto=car_auto)
-data_input_0$model_name<-toupper(data_input_0$model_name)
-data_input_0$auto<-gsub("-／","",data_input_0$auto)
-data_input_0<-data.frame(data_input_0,discharge_standard="",liter="")
-#---准确性accurate
-accurate<-c(length(a4),nrow(yck_che168))
-rm(a1,a2,a3,a4,brand_name,series_name,car_name_info,input_test1,qx_series_all,qx_series_des)
-gc()
+data_input_0<-rbind(a1,a2,a3) ##添加
+data_input_0<-inner_join(data_input_0,yck_czw12365[,c("car_id","brand_name","series_name","model_name")],by="car_id")%>%
+  dplyr::select(brand_name=name,series_name=series,series_id_sohu=car_auto) %>% unique()
 
+config_series_id_add<-merge(config_series_levels,data_input_0,
+                            by.x=c('brand_c300','series_c300'),
+                            by.y=c('brand_name','series_name')) %>% dplyr::select(series_id_300=series_id_c300,series_id_sohu) %>% unique()
 
-
-######################------第二部分：清洗model_name-------#################
-#-----数据转换名称------
-data_input<-data_input_0
-data_input$model_price<-as.integer(data_input$model_price)
-qx_name<-toupper(data_input$model_name)
-qx_name<-trim(qx_name)
-qx_name<-gsub(" +"," ",qx_name)
-car_model_name<-data_input$model_name
-##---------part1：得到年款及指导价--------------car_model_name[-grep("",car_year)]
-qx_name<-gsub("2012年","2012款",qx_name)
-qx_name<-gsub("-2011 款","2011款 ",qx_name)
-car_year<-str_extract(qx_name,"[1-2][0-9][0-9][0-9]款|[0-9][0-9]款|2000")
-car_year<-gsub("款","",car_year)
-car_year[which(nchar(car_year)==2)]<-paste("20",car_year[which(nchar(car_year)==2)],sep = "")
-loc_year<-str_locate(qx_name,"[1-2][0-9][0-9][0-9]款|[0-9][0-9]款|2000")
-car_price<-round(data_input$model_price/10000,2)
-qx_name<-str_sub(qx_name,loc_year[,2]+1)
-
-qx_name<-gsub("\\（","(",qx_name)
-qx_name<-gsub("\\）",")",qx_name)
-qx_name<-gsub("\\(进口\\)","",qx_name)
-qx_name<-gsub("\\(海外\\)","",qx_name)
-qx_name<-gsub("POWER DAILY","宝迪",qx_name)
-qx_name<-gsub("III","Ⅲ",qx_name)
-qx_name<-gsub("II","Ⅱ",qx_name)
-qx_name<-gsub("—|－","-",qx_name)
-qx_name<-gsub("\\·|\\?|(-|)JL465Q","",qx_name)
-qx_name<-gsub("ONE\\+","ONE佳",qx_name)
-qx_name<-gsub("劲能版\\+","劲能版佳",qx_name)
-qx_name<-gsub("选装(包|)","佳",qx_name)
-qx_name<-gsub("2\\/3|2\\+2\\+3|2\\+3\\+2","",qx_name)
-
-car_name<-data_input$brand_name
-car_series1<-data_input$series_name
-forFun<-function(i){
-  sub(car_series1[i],"",qx_name[i])
-}
-qx_name<-unlist(lapply(1:length(car_series1),forFun))
-
-
-##--------------------停用词清洗--------------------
-####################################################CROSS
-###-------词语描述归一-----
-output_data<-fun_stopWords(data_input,qx_name)
-#------------------数据保存----------------
-qx_che168<-data.frame(X=data_input_0$car_id,output_data)
-
-#清洗多余空格
-qx_che168<-trim(qx_che168)
-qx_che168$car_model_name<-gsub(" +"," ",qx_che168$car_model_name)
-qx_che168<-sapply(qx_che168,as.character)
-for (i in 1:dim(qx_che168)[2]) {
-  qx_che168[,i][which(is.na(qx_che168[,i]))]<-""
-}
-qx_che168<-data.frame(qx_che168)
-qx_che168$X<-as.integer(as.character(qx_che168$X))
-#########################################################################################################
-##################################################第二大章：数据匹配#####################################
-source(paste0(deep_local,"\\config\\config_fun\\fun_match.R",sep=""),echo=TRUE,encoding="utf-8")
-source(paste0(deep_local,"\\config\\config_fun\\fun_iteration.R",sep=""),echo=TRUE,encoding="utf-8")
-source(paste0(deep_local,"\\config\\config_fun\\fun_match_result.R",sep=""),echo=TRUE,encoding="utf-8")
-data_input<-qx_che168
-##调用函数计算结果列表
-list_result<-fun_match_result(che300,qx_che168)
-confidence<-list_result$confidence
-return_db<-list_result$return_db
-match_right<-list_result$match_right
-match_repeat<-list_result$match_repeat
-match_not<-list_result$match_not
-return_db<-data.frame(car_platform="che168",return_db)
-return_db$id_che300<-as.integer(as.character(return_db$id_che300))
-write.csv(return_db,paste0(deep_local,"\\file\\output\\che168.csv",sep=""),row.names = F)
-###日志文件
-rizhi<-data.frame(platform=unique(return_db$car_platform),
-                  accurate=round(accurate[2]/(accurate[1]+accurate[2]),3),
-                  n_right=nrow(match_right),n_repeat=nrow(match_repeat),
-                  n_not=nrow(match_not),add_date=Sys.Date())
+#写入数据库
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
-dbWriteTable(loc_channel,"log_analysis_match_id",rizhi,append=T,row.names=F)
+config_series_id_match<-dbFetch(dbSendQuery(loc_channel,"SELECT DISTINCT b.series_id series_id_300,c.series_id series_id_sohu FROM config_plat_id_match a 
+                INNER JOIN config_che300_major_info b ON a.id_che300=b.model_id
+                INNER JOIN config_souhu_major_info c ON a.id_souhu=c.model_id
+                WHERE id_souhu!=0
+                UNION SELECT DISTINCT series_id_300,series_id_sohu FROM config_series_id_match;"),-1)
+config_series_id_match<-rbind(config_series_id_match,config_series_id_add) %>% unique()
+dbWriteTable(loc_channel,'config_series_id_match',config_series_id_match,overwrite = T,row.names=F)
 dbDisconnect(loc_channel)
-#########################################################################

@@ -43,7 +43,7 @@ rm_series_rule$series<-as.character(rm_series_rule$series)
 
 ###input_test2<-input_test1    input_test1<-input_test2
 ###----------------前期准备：提取准确的brand和series-----------
-brand_name<-str_extract(input_test1$model_name,c(str_c(rm_series_rule$rule_name,sep="",collapse = "|")))
+brand_name<-str_extract(input_test1$model_name,c(str_c(unique(rm_series_rule$rule_name),sep="",collapse = "|")))
 brand_name[which(is.na(brand_name))]<-""
 linshi_series<-c(str_c(rm_series_rule$rule_series,sep="",collapse = "|"))
 series_name<-str_extract(input_test1$model_name,gsub(" ","",linshi_series))
@@ -94,12 +94,16 @@ a3<-inner_join(a3,rm_series_rule,c("series_t"="series_t"))%>%
   dplyr::select(car_id,brand_name,series_name,model_name,model_price,id,name,series,qx_series_all,discharge_standard,car_auto,liter)
 ##-----------------第四步：未匹配上a4-----------########
 a4<-data.frame(car_id=setdiff(input_test1$car_id,a3$car_id))
-a4<-data.frame(inner_join(a4,input_test1,c("car_id"="car_id")),id="",name="",series="",qx_series_all="")
-a4$name<-a4$brand_name
-a4$series<-a4$series_name
+if(nrow(a4)==0){
+  data_input_0<-rbind(a1,a2,a3)
+}else{
+  a4<-data.frame(inner_join(a4,input_test1,c("car_id"="car_id")),id="",name="",series="",qx_series_all="")
+  a4$name<-a4$brand_name
+  a4$series<-a4$series_name
+  data_input_0<-rbind(a1,a2,a3,a4)
+}
 
 ########----组合所有car_id---###########
-data_input_0<-rbind(a1,a2,a3,a4)
 data_input_0<-inner_join(data_input_0,yck_czp[,c("car_id","brand_name","series_name","model_name")],by="car_id")%>%
   dplyr::select(car_id,brand_name=name,series_name=series,model_name=model_name.y,model_price,qx_series_all,discharge_standard,auto=car_auto)
 data_input_0$model_name<-toupper(data_input_0$model_name)

@@ -46,7 +46,7 @@ input_test1$car_id<-as.integer(input_test1$car_id)
 rm_series_rule$qx_series_all<-as.character(rm_series_rule$qx_series_all)
 rm_series_rule$series<-as.character(rm_series_rule$series)
 ##补充新的name
-brand_name<-str_extract(input_test1$brand_name,c(str_c(rm_series_rule$rule_name,sep="",collapse = "|")))
+brand_name<-str_extract(input_test1$brand_name,c(str_c(unique(rm_series_rule$rule_name),sep="",collapse = "|")))
 linshi_series<-c(str_c(rm_series_rule$rule_series,sep="",collapse = "|"))
 linshi1<-data.frame(series=str_extract(paste(input_test1$brand_name,input_test1$series_name,input_test1$model_name,sep = "")[which(is.na(brand_name))],gsub(" ","",linshi_series)))
 linshi1$series<-as.character(linshi1$series)

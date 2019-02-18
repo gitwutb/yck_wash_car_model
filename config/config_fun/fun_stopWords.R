@@ -197,8 +197,8 @@ fun_stopWords<-function(data_input,qx_name){
   
   
   #######----------car_series3提炼车型-------
-  car_series3<-str_extract(qx_name,c(str_c(rm_rule$qx_series3,sep="",collapse = "|")))
-  qx_name<-gsub(c(str_c(rm_rule$qx_series3,sep="",collapse = "|")),"",qx_name)
+  car_series3<-str_extract(qx_name,c(str_c(unique(rm_rule$qx_series3),sep="",collapse = "|")))
+  qx_name<-gsub(c(str_c(unique(rm_rule$qx_series3),sep="",collapse = "|")),"",qx_name)
   linshi<-str_extract(qx_name,"掀背")
   linshi[which(is.na(linshi))]<-""
   car_series3[which(is.na(car_series3))]<-""

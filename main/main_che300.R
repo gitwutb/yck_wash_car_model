@@ -1,4 +1,5 @@
 #清除缓存
+##说明：处理得到车300相关表analysis_che300_cofig_info、config_reg_series_rule、config_series_levels
 #[\u4e00-\u9fa5]汉字
 rm(list = ls(all=T))
 gc()
@@ -12,8 +13,8 @@ loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000
 dbSendQuery(loc_channel,'SET NAMES gbk')
 table.name<-dbListTables(loc_channel)
 # field.name<-dbListFields(loc_channel,"")
-data_che300<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM config_che300_major_info;"),-1)
-data_che300<-data_che300%>%dplyr::select(-seat_number,-short_name)
+data_che300<-dbFetch(dbSendQuery(loc_channel,"SELECT model_id,brand_name,series_group_name,series_name,model_name,
+        model_price,model_year,auto,liter,discharge_standard FROM config_vdatabase_yck_major_info;"),-1)
 dbDisconnect(loc_channel)
 source(paste0(deep_local,"\\config\\config_fun\\fun_stopWords.R",sep=""),echo=TRUE,encoding="utf-8")
 
@@ -50,25 +51,24 @@ car_series1<-toupper(data_input$series_name)
 car_series1<-gsub("格锐","格越",car_series1)
 car_series1<-gsub("\\（","(",car_series1)
 car_series1<-gsub("\\）",")",car_series1)
-linshi<-str_extract(car_series1,"进口|海外")
 car_series1<-gsub("\\(进口\\)|\\(海外\\)","",car_series1)
 forFun<-function(i){
   sub(car_series1[i],"",qx_name[i])
 }
 qx_name<-unlist(lapply(1:length(car_series1),forFun))
 qx_name[grep("\\+",car_series1)]<-sub("\\+","",qx_name[grep("\\+",car_series1)])
-linshi[-grep("",linshi)]<-""
-car_series1<-paste(car_series1,"-",linshi,sep = "")
+car_series1[grep('进口',data_input$series_group_name)]<-paste0(car_series1[grep('进口',data_input$series_group_name)],'-进口')
 car_series1<-gsub("-$","",car_series1)
 ##--series停用词----
 car_series1<-gsub("全新奔腾","奔腾",car_series1)
 car_series1<-gsub("北京汽车|北京","",car_series1)
 car_series1<-gsub("^JEEP$","北京JEEP",car_series1)
-car_series1<-gsub("全新奔腾","奔腾",car_series1)
+car_series1<-gsub("依维柯Venice|Venice","威尼斯",car_series1)
 car_series1<-gsub("锋范经典","锋范",car_series1)
 car_series1<-gsub("名爵ZS","MGZS",car_series1)
 car_series1<-gsub("MINI |SMART ","",car_series1)
 car_series1<-gsub("PASSAT","帕萨特",car_series1)
+car_series1<-gsub("塞纳SIENNA|SIENNA","塞纳",car_series1)
 car_series1<-gsub("\\+","佳",car_series1)
 
 
@@ -108,7 +108,7 @@ library(raster)
 deep_local<-gsub("\\/main|\\/bat","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
 loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
 dbSendQuery(loc_channel,'SET NAMES gbk')
-data_che300<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM analysis_che300_cofig_info;"),-1)
+data_che300<-dbFetch(dbSendQuery(loc_channel,"SELECT car_name,car_series1 FROM analysis_che300_cofig_info;"),-1)
 dbDisconnect(loc_channel)
 
 #-----数据转换名称------
@@ -153,6 +153,10 @@ dbSendQuery(loc_channel,'SET NAMES gbk')
 dbSendQuery(loc_channel,"TRUNCATE TABLE config_reg_series_rule")
 dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE ","'",paste0(deep_local,"/reg_series_rule.csv",sep=""),"'",
                                " INTO TABLE config_reg_series_rule CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;"))
+dbSendQuery(loc_channel,"TRUNCATE TABLE config_series_levels")
+dbSendQuery(loc_channel,"INSERT INTO config_series_levels SELECT DISTINCT a.car_name brand_c300,a.car_series1 series_c300,b.series_id series_id_c300,car_level FROM analysis_che300_cofig_info a 
+ INNER JOIN config_che300_major_info b ON a.car_id=b.model_id WHERE car_level!='-'")
+dbSendQuery(loc_channel,"UPDATE config_series_levels SET brand_c300=REPLACE(brand_c300,'·',''),series_c300=REPLACE(series_c300,'-进口','')")
 dbDisconnect(loc_channel)
 
 
@@ -162,12 +166,29 @@ dbSendQuery(loc_channel,'SET NAMES gbk')
 dbSendQuery(loc_channel,"TRUNCATE TABLE analysis_che300_cofig_info")
 dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE ","'",paste0(deep_local,"/qx_che300.csv",sep=""),"'",
                                " INTO TABLE analysis_che300_cofig_info CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;"))
-dbDisconnect(loc_channel)
-
-loc_channel<-dbConnect(MySQL(),user = "yckdc",host="47.106.189.86",password= "YckDC888",dbname="yck-data-center")
-dbSendQuery(loc_channel,'SET NAMES gbk')
+#config_reg_series_rule
 dbSendQuery(loc_channel,"TRUNCATE TABLE config_reg_series_rule")
 dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE ","'",paste0(deep_local,"/reg_series_rule.csv",sep=""),"'",
                                " INTO TABLE config_reg_series_rule CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;"))
+#更新config_series_levels
+dbSendQuery(loc_channel,"TRUNCATE TABLE config_series_levels")
+dbSendQuery(loc_channel,"INSERT INTO config_series_levels SELECT DISTINCT a.car_name brand_c300,a.car_series1 series_c300,b.series_id series_id_c300,car_level FROM analysis_che300_cofig_info a 
+ INNER JOIN config_che300_major_info b ON a.car_id=b.model_id WHERE car_level!='-'")
+dbSendQuery(loc_channel,"UPDATE config_series_levels SET brand_c300=REPLACE(brand_c300,'·',''),series_c300=REPLACE(series_c300,'-进口','')")
 dbDisconnect(loc_channel)
 file.remove(c(paste0(deep_local,"\\reg_series_rule.csv",sep=""),paste0(deep_local,"\\qx_che300.csv",sep="")))
+
+# loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
+# dbSendQuery(loc_channel,'SET NAMES gbk')
+# config_che300_detail_info<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM config_che300_detail_info;"),-1)
+# dbDisconnect(loc_channel)
+# write.csv(config_che300_detail_info,paste0(deep_local,"\\config_che300_detail_info.csv",sep=""),row.names = F,fileEncoding = "UTF-8",quote = F)
+# 
+# #################**********云服务器**********#################
+# loc_channel<-dbConnect(MySQL(),user = "yckdc",host="47.106.189.86",password= "YckDC888",dbname="yck-data-center")
+# dbSendQuery(loc_channel,'SET NAMES gbk')
+# dbSendQuery(loc_channel,"TRUNCATE TABLE config_che300_detail_info")
+# dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE ","'",paste0(deep_local,"/config_che300_detail_info.csv",sep=""),"'",
+#                                " INTO TABLE config_che300_detail_info CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;"))
+# dbDisconnect(loc_channel)
+

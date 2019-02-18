@@ -39,7 +39,7 @@ input_test1$series_name[grep("劲炫ASX",input_test1$model_name)]<-gsub("劲炫A
 input_test1$car_id<-as.integer(input_test1$car_id)
 rm_series_rule$qx_series_all<-as.character(rm_series_rule$qx_series_all)
 rm_series_rule$series<-as.character(rm_series_rule$series)
-brand_name<-str_extract(input_test1$brand_name,c(str_c(rm_series_rule$rule_name,sep="",collapse = "|")))
+brand_name<-str_extract(input_test1$brand_name,c(str_c(unique(rm_series_rule$rule_name),sep="",collapse = "|")))
 brand_name[which(is.na(brand_name))]<-input_test1$brand_name[which(is.na(brand_name))]
 linshi_series<-c(str_c(rm_series_rule$rule_series,sep="",collapse = "|"))
 series_name<-str_extract(input_test1$series_name,gsub(" ","",linshi_series))

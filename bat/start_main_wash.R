@@ -5,3 +5,5 @@ source(paste0(gsub("\\/bat","",tryCatch(dirname(rstudioapi::getActiveDocumentCon
 ####highLight
 source(paste0(gsub("\\/bat","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()})),'/Model_library/hl_config_che300/hl_config_che300.R',sep=""),echo=TRUE,encoding="utf-8")
 #source(paste0(gsub("\\/bat","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()})),'/Model_library/Model_library_autohome/yck_autohome_match.R',sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(gsub("\\/bat","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()})),'/main/main_detail/series/config_series_id_match.R',sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(gsub("\\/bat","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()})),'/main/main_detail/series/czw12365.R',sep=""),echo=TRUE,encoding="utf-8")

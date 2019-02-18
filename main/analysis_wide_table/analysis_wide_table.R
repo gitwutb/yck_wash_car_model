@@ -27,14 +27,14 @@ config_distr<-dbFetch(dbSendQuery(loc_channel,"SELECT DISTINCT regional,b.provin
                                   INNER JOIN config_district_regional b ON a.key_province=b.province;"),-1)
 config_distr_all<-dbFetch(dbSendQuery(loc_channel,"SELECT DISTINCT regional,b.province,a.key_municipal city,a.key_county FROM config_district a
                                   INNER JOIN config_district_regional b ON a.key_province=b.province;"),-1)
-config_series_class<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM config_series_class"),-1)
+config_series_bcountry<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM config_series_bcountry"),-1)
 dbDisconnect(loc_channel)
 ######
 input_orig$add_time<-as.Date(input_orig$add_time)
 input_orig$mile<-round(input_orig$mile/10000,2)
 input_orig$quotes<-round(input_orig$quotes/10000,2)
 input_orig<-inner_join(input_orig,config_distr,c("location"="city"))
-input_orig<-inner_join(input_orig,config_series_class,c("brand"="brand"))
+input_orig<-inner_join(input_orig,config_series_bcountry,c("brand"="brand"))
 user_years<-round((as.Date(input_orig$add_time)-as.Date(input_orig$regDate))/365,2)
 input_orig<-data.frame(input_orig,user_years)
 if(nrow(input_orig)==0){
@@ -87,7 +87,7 @@ location_ls[which(is.na(location_ls))]<-str_extract(input_orig$address[which(is.
 input_orig$location<-location_ls
 input_orig<-inner_join(input_orig,config_distr,c("location"="city"))
 #
-input_orig<-inner_join(input_orig,config_series_class,c("brand"="brand"))
+input_orig<-inner_join(input_orig,config_series_bcountry,c("brand"="brand"))
 user_years<-round((as.Date(input_orig$add_time)-as.Date(input_orig$regDate))/365,2)
 input_orig<-data.frame(input_orig,user_years)
 if(nrow(input_orig)==0){
@@ -142,7 +142,7 @@ location_ls[which(is.na(location_ls))]<-as.character(inner_join(config_distr_all
 input_orig$location<-location_ls
 input_orig<-inner_join(input_orig,config_distr,c("location"="city"))
 #
-input_orig<-inner_join(input_orig,config_series_class,c("brand"="brand"))
+input_orig<-inner_join(input_orig,config_series_bcountry,c("brand"="brand"))
 user_years<-round((as.Date(input_orig$add_time)-as.Date(input_orig$regDate))/365,2)
 input_orig<-data.frame(input_orig,user_years)
 if(nrow(input_orig)==0){
@@ -198,7 +198,7 @@ location_ls[which(is.na(location_ls))]<-as.character(right_join(config_distr_all
 input_orig$location<-location_ls
 input_orig<-inner_join(input_orig,config_distr,c("location"="city"))
 #
-input_orig<-inner_join(input_orig,config_series_class,c("brand"="brand"))
+input_orig<-inner_join(input_orig,config_series_bcountry,c("brand"="brand"))
 user_years<-round((as.Date(input_orig$add_time)-as.Date(input_orig$regDate))/365,2)
 input_orig<-data.frame(input_orig,user_years)
 if(nrow(input_orig)==0){
@@ -273,7 +273,7 @@ input_orig$location<-location_ls
 input_orig<-inner_join(input_orig,config_distr,c("location"="city"))
 rm(laji,laji1,location_ls2)
 ##########
-input_orig<-inner_join(input_orig,config_series_class,c("brand"="brand"))
+input_orig<-inner_join(input_orig,config_series_bcountry,c("brand"="brand"))
 user_years<-round((as.Date(input_orig$add_time)-as.Date(input_orig$regDate))/365,2)
 input_orig<-data.frame(input_orig,user_years)
 if(nrow(input_orig)==0){
@@ -325,7 +325,7 @@ input_orig$location<-gsub("http://|.58.com.*","",input_orig$location)
 input_orig<-inner_join(input_orig,che58_city,c("location"="che58_name"))
 input_orig$location<-input_orig$city
 ##########
-input_orig<-inner_join(input_orig,config_series_class,c("brand"="brand"))
+input_orig<-inner_join(input_orig,config_series_bcountry,c("brand"="brand"))
 user_years<-round((as.Date(input_orig$add_time)-as.Date(input_orig$regDate))/365,2)
 input_orig<-data.frame(input_orig,user_years)
 if(nrow(input_orig)==0){
@@ -393,7 +393,7 @@ input_orig$location<-location_ls$city
 input_orig<-data.frame(input_orig,regional=location_ls$regional,province=location_ls$province)
 if(length(which(is.na(location_ls$regional)))>0){input_orig<-input_orig[-which(is.na(location_ls$regional)),]}
 ##########
-input_orig<-inner_join(input_orig,config_series_class,c("brand"="brand"))
+input_orig<-inner_join(input_orig,config_series_bcountry,c("brand"="brand"))
 user_years<-round((as.Date(input_orig$add_time)-as.Date(input_orig$regDate))/365,2)
 input_orig<-data.frame(input_orig,user_years)
 if(nrow(input_orig)==0){
@@ -461,7 +461,7 @@ location_ls[which(is.na(location_ls))]<-as.character(right_join(config_distr_all
 input_orig$location<-location_ls
 input_orig<-inner_join(input_orig,config_distr,c("location"="city"))
 ##########
-input_orig<-inner_join(input_orig,config_series_class,c("brand"="brand"))
+input_orig<-inner_join(input_orig,config_series_bcountry,c("brand"="brand"))
 user_years<-round((as.Date(input_orig$add_time)-as.Date(input_orig$regDate))/365,2)
 input_orig<-data.frame(input_orig,user_years)
 if(nrow(input_orig)==0){
@@ -520,7 +520,7 @@ if(nrow(input_orig)==0){
 # input_orig$location<-location_ls
 # input_orig<-inner_join(input_orig,config_distr,c("location"="city"))
 # ##########
-# input_orig<-inner_join(input_orig,config_series_class,c("brand"="brand"))
+# input_orig<-inner_join(input_orig,config_series_bcountry,c("brand"="brand"))
 # user_years<-round((as.Date(input_orig$add_time)-as.Date(input_orig$regDate))/365,2)
 # input_orig<-data.frame(input_orig,user_years)
 # if(nrow(input_orig)==0){

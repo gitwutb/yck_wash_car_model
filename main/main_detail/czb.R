@@ -48,7 +48,7 @@ rm_series_rule$series<-as.character(rm_series_rule$series)
 
 ###input_test2<-input_test1    input_test1<-input_test2
 ###----------------前期准备：提取准确的brand和series-----------
-brand_name<-str_extract(input_test1$model_name,c(str_c(rm_series_rule$rule_name,sep="",collapse = "|")))
+brand_name<-str_extract(input_test1$model_name,c(str_c(unique(rm_series_rule$rule_name),sep="",collapse = "|")))
 brand_name[which(is.na(brand_name))]<-""
 linshi_series<-c(str_c(rm_series_rule$rule_series,sep="",collapse = "|"))
 series_name<-str_extract(input_test1$model_name,gsub(" ","",linshi_series))
