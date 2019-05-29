@@ -8,7 +8,9 @@ library(stringr)
 library(lubridate)
 library(parallel)
 library(rlist)
-local_defin<-data.frame(user = 'root',host='192.168.0.111',password= '000000',dbname='yck-data-center',stringsAsFactors = F)
+local_file<-gsub("(\\/main|\\/bat|\\/Model_library).*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
+source(paste0(local_file,"/config/config_fun/fun_mysql_config_up.R"),echo=FALSE,encoding="utf-8")
+local_defin<-fun_mysql_config_up()$local_defin
 #function
 fun_config_bright_sim<-function(model_id){
   loc_channel<-dbConnect(MySQL(),user = local_defin$user,host=local_defin$host,password= local_defin$password,dbname=local_defin$dbname)

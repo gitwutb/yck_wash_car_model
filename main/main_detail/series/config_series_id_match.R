@@ -7,26 +7,30 @@ library(raster)
 #help(package="dplyr")
 #读取数据
 library(RMySQL)
-deep_local<-gsub("\\/bat|\\/main.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
-loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
+local_file<-gsub("\\/bat|\\/main.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
+source(paste0(local_file,"\\config\\config_fun\\fun_mysql_config_up.R"),echo=FALSE,encoding="utf-8")
+local_defin<-fun_mysql_config_up()$local_defin
+local_defin_yun<-fun_mysql_config_up()$local_defin_yun
+
+loc_channel<-dbConnect(MySQL(),user = local_defin$user,host=local_defin$host,password= local_defin$password,dbname=local_defin$dbname)
 dbSendQuery(loc_channel,'SET NAMES gbk')
 yck_czw12365<-dbFetch(dbSendQuery(loc_channel,"SELECT model_id car_id,brand_name,series_name,CONCAT(brand_name,series_name) model_name,model_price,series_id car_auto,series_id FROM config_souhu_major_info;"),-1)
 id_match<-dbFetch(dbSendQuery(loc_channel,"SELECT DISTINCT id_souhu model_id FROM config_plat_id_match WHERE id_souhu!=0;"),-1)
 id_match1<-dbFetch(dbSendQuery(loc_channel,"SELECT DISTINCT c.series_id series_id_sohu FROM config_plat_id_match a 
-                          INNER JOIN config_che300_major_info b ON a.id_che300=b.model_id
+                          INNER JOIN config_vdatabase_yck_major_info b ON a.id_che300=b.model_id
                           INNER JOIN config_souhu_major_info c ON a.id_souhu=c.model_id
                           WHERE id_souhu!=0
                           UNION SELECT DISTINCT series_id_sohu FROM config_series_id_match;"),-1)
 rm_series_rule<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM config_reg_series_rule;"),-1)
 che300<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM analysis_che300_cofig_info;"),-1)
-config_series_levels<-dbFetch(dbSendQuery(loc_channel,"SELECT DISTINCT brand_c300,series_c300,series_id_c300 FROM config_series_levels;"),-1)
+config_series_levels<-dbFetch(dbSendQuery(loc_channel,"SELECT DISTINCT brand_name brand_c300,series_name series_c300,series_id series_id_c300 FROM config_vdatabase_yck_major_info;"),-1)
 dbDisconnect(loc_channel)
 yck_not_have<-data.frame(car_id=setdiff(yck_czw12365$car_id,id_match$model_id))
 yck_czw12365<-merge(yck_czw12365,yck_not_have,by="car_id")
 yck_not_have<-data.frame(series_id=setdiff(unique(yck_czw12365$series_id),id_match1$series_id_sohu))
 yck_czw12365<-merge(yck_czw12365,yck_not_have,by="series_id") %>% dplyr::select(-series_id)
-source(paste0(deep_local,"\\config\\config_fun\\fun_stopWords.R",sep=""),echo=TRUE,encoding="utf-8")
-source(paste0(deep_local,"\\config\\config_fun\\fun_normalization.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(local_file,"\\config\\config_fun\\fun_stopWords.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(local_file,"\\config\\config_fun\\fun_normalization.R",sep=""),echo=TRUE,encoding="utf-8")
 
 ######################------第一部分：得到车的品牌及车系-------#################
 ##临时车名
@@ -117,10 +121,21 @@ config_series_id_add<-merge(config_series_levels,data_input_0,
                             by.y=c('brand_name','series_name')) %>% dplyr::select(series_id_300=series_id_c300,series_id_sohu) %>% unique()
 
 #写入数据库
-loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
+loc_channel<-dbConnect(MySQL(),user = local_defin$user,host=local_defin$host,password= local_defin$password,dbname=local_defin$dbname)
 dbSendQuery(loc_channel,'SET NAMES gbk')
 config_series_id_match<-dbFetch(dbSendQuery(loc_channel,"SELECT DISTINCT b.series_id series_id_300,c.series_id series_id_sohu FROM config_plat_id_match a 
-                INNER JOIN config_che300_major_info b ON a.id_che300=b.model_id
+                INNER JOIN config_vdatabase_yck_major_info b ON a.id_che300=b.model_id
+                INNER JOIN config_souhu_major_info c ON a.id_souhu=c.model_id
+                WHERE id_souhu!=0
+                UNION SELECT DISTINCT series_id_300,series_id_sohu FROM config_series_id_match;"),-1)
+config_series_id_match<-rbind(config_series_id_match,config_series_id_add) %>% unique()
+dbWriteTable(loc_channel,'config_series_id_match',config_series_id_match,overwrite = T,row.names=F)
+dbDisconnect(loc_channel)
+
+loc_channel<-dbConnect(MySQL(),user = local_defin_yun$user,host=local_defin_yun$host,password= local_defin_yun$password,dbname=local_defin_yun$dbname)
+dbSendQuery(loc_channel,'SET NAMES gbk')
+config_series_id_match<-dbFetch(dbSendQuery(loc_channel,"SELECT DISTINCT b.series_id series_id_300,c.series_id series_id_sohu FROM config_plat_id_match a 
+                INNER JOIN config_vdatabase_yck_major_info b ON a.id_che300=b.model_id
                 INNER JOIN config_souhu_major_info c ON a.id_souhu=c.model_id
                 WHERE id_souhu!=0
                 UNION SELECT DISTINCT series_id_300,series_id_sohu FROM config_series_id_match;"),-1)

@@ -20,7 +20,7 @@ yck1<-dbFetch(dbSendQuery(loc_channel,"select model_id autohome_id,brand_letter 
 yck2<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM config_autohome_detail_info;"),-1)%>%dplyr::select(-url)
 dbDisconnect(loc_channel)
 
-loc_channel<-dbConnect(MySQL(),user = "data",host="youcku.com",password= "9jl3Jjkl",dbname="yck")
+loc_channel<-dbConnect(MySQL(),user = "data",host="youcku.com",password= "6wrzfhG",dbname="yck")
 dbSendQuery(loc_channel,'SET NAMES gbk')
 yck_have<-dbFetch(dbSendQuery(loc_channel,"SELECT DISTINCT autohome_id FROM yck_car_basic_config WHERE autohome_id is NOT NULL;"),-1)
 id_max<-dbFetch(dbSendQuery(loc_channel,"SELECT MAX(id) FROM yck_car_basic_config;"),-1)%>%as.numeric()
@@ -104,19 +104,19 @@ bf_yck$autohome_id[which(is.na(bf_yck$autohome_id))]<-''
 write.csv(bf_yck,paste0(file_path,"/Model_library/Model_library_autohome/bf_yck.csv"),
           row.names = F,fileEncoding = "UTF-8",quote = F)
 
-loc_channel<-dbConnect(MySQL(),user = "data",host="youcku.com",password= "9jl3Jjkl",dbname="yck")
+loc_channel<-dbConnect(MySQL(),user = "data",host="youcku.com",password= "6wrzfhG",dbname="yck")
 dbSendQuery(loc_channel,'SET NAMES gbk')
-dbSendQuery(loc_channel,"TRUNCATE TABLE yck_car_basic_config")
+#dbSendQuery(loc_channel,"TRUNCATE TABLE yck_car_basic_config")
 dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE ","'",paste0(file_path,"/Model_library/Model_library_autohome/bf_yck.csv"),"'",
-                               " INTO TABLE yck_car_basic_config CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;"))
+                               "REPLACE INTO TABLE yck_car_basic_config CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;"))
 dbSendQuery(loc_channel,"UPDATE yck_car_basic_config SET autohome_id=NULL WHERE autohome_id=0")
 dbDisconnect(loc_channel)
 
-loc_channel<-dbConnect(MySQL(),user = "data",host="120.79.98.108",password= "546asdfQ",dbname="yck")
+loc_channel<-dbConnect(MySQL(),user = "data",host="120.79.98.108",password= "543asdfQ",dbname="yck")
 dbSendQuery(loc_channel,'SET NAMES gbk')
-dbSendQuery(loc_channel,"TRUNCATE TABLE yck_car_basic_config")
-dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE ","'",paste0(file_path,"/bf_yck.csv"),"'",
-                               " INTO TABLE yck_car_basic_config CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;"))
+#dbSendQuery(loc_channel,"TRUNCATE TABLE yck_car_basic_config")
+dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE ","'",paste0(file_path,"/Model_library/Model_library_autohome/bf_yck.csv"),"'",
+                               "REPLACE INTO TABLE yck_car_basic_config CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;"))
 dbSendQuery(loc_channel,"UPDATE yck_car_basic_config SET autohome_id=NULL WHERE autohome_id=0")
 dbDisconnect(loc_channel)
 

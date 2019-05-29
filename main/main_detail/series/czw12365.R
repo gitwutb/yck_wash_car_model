@@ -7,8 +7,12 @@ library(raster)
 #help(package="dplyr")
 #读取数据
 library(RMySQL)
-deep_local<-gsub("\\/bat|\\/main.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
-loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
+local_file<-gsub("\\/bat|\\/main.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
+source(paste0(local_file,"\\config\\config_fun\\fun_mysql_config_up.R"),echo=FALSE,encoding="utf-8")
+local_defin<-fun_mysql_config_up()$local_defin
+local_defin_yun<-fun_mysql_config_up()$local_defin_yun
+
+loc_channel<-dbConnect(MySQL(),user = local_defin$user,host=local_defin$host,password= local_defin$password,dbname=local_defin$dbname)
 dbSendQuery(loc_channel,'SET NAMES gbk')
 table.name<-dbListTables(loc_channel)
 # field.name<-dbListFields(loc_channel,"")
@@ -16,10 +20,10 @@ yck_czw12365<-dbFetch(dbSendQuery(loc_channel,"SELECT id car_id,brand brand_name
                                    WHERE series_id_c300 IS NULL;"),-1)
 rm_series_rule<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM config_reg_series_rule;"),-1)
 che300<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM analysis_che300_cofig_info;"),-1)
-config_series_levels<-dbFetch(dbSendQuery(loc_channel,"SELECT DISTINCT brand_c300,series_c300,series_id_c300 FROM config_series_levels;"),-1)
+config_series_levels<-dbFetch(dbSendQuery(loc_channel,"SELECT DISTINCT brand_name brand_c300,series_name series_c300,series_id series_id_c300 FROM config_vdatabase_yck_major_info;"),-1)
 dbDisconnect(loc_channel)
-source(paste0(deep_local,"\\config\\config_fun\\fun_stopWords.R",sep=""),echo=TRUE,encoding="utf-8")
-source(paste0(deep_local,"\\config\\config_fun\\fun_normalization.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(local_file,"\\config\\config_fun\\fun_stopWords.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(local_file,"\\config\\config_fun\\fun_normalization.R",sep=""),echo=TRUE,encoding="utf-8")
 
 
 ######################------第一部分：得到车的品牌及车系-------#################
@@ -123,14 +127,22 @@ series_czw12365<-transform(series_czw12365,index_id=unlist(tapply(car_id,car_id,
   dplyr::filter(index_id==1) %>% dplyr::select(-index_id)
 
 #写入数据库
-write.csv(series_czw12365,paste0(deep_local,"/main/main_detail/series/series_czw12365.csv",sep=""),
+write.csv(series_czw12365,paste0(local_file,"/main/main_detail/series/series_czw12365.csv",sep=""),
           row.names = F,fileEncoding = "UTF-8",quote = F)
-loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
+loc_channel<-dbConnect(MySQL(),user = local_defin$user,host=local_defin$host,password= local_defin$password,dbname=local_defin$dbname)
 dbSendQuery(loc_channel,'SET NAMES gbk')
-dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE '",deep_local,"/main/main_detail/series/series_czw12365.csv'",
+dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE '",local_file,"/main/main_detail/series/series_czw12365.csv'",
                                " INTO TABLE spider_complain_12365auto_series CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;",sep=""))
 dbSendQuery(loc_channel,"UPDATE spider_complain_12365auto a
   INNER JOIN spider_complain_12365auto_series b ON a.id=b.car_id SET a.brand_c300=b.brand_c300,a.series_c300=b.series_c300,a.series_id_c300=b.series_id_c300")
 dbSendQuery(loc_channel,"TRUNCATE TABLE spider_complain_12365auto_series")
 dbDisconnect(loc_channel)
-file.remove(c(paste0(deep_local,"/main/main_detail/series/series_czw12365.csv",sep="")))
+loc_channel<-dbConnect(MySQL(),user = local_defin_yun$user,host=local_defin_yun$host,password= local_defin_yun$password,dbname=local_defin_yun$dbname)
+dbSendQuery(loc_channel,'SET NAMES gbk')
+dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE '",local_file,"/main/main_detail/series/series_czw12365.csv'",
+                               " INTO TABLE spider_complain_12365auto_series CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;",sep=""))
+dbSendQuery(loc_channel,"UPDATE spider_complain_12365auto a
+  INNER JOIN spider_complain_12365auto_series b ON a.id=b.car_id SET a.brand_c300=b.brand_c300,a.series_c300=b.series_c300,a.series_id_c300=b.series_id_c300")
+dbSendQuery(loc_channel,"TRUNCATE TABLE spider_complain_12365auto_series")
+dbDisconnect(loc_channel)
+file.remove(c(paste0(local_file,"/main/main_detail/series/series_czw12365.csv",sep="")))

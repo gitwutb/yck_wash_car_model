@@ -329,7 +329,8 @@ fun_match_result_czb<-function(che300,data_input){
   linshi_rid$linshi_rid<-as.integer(as.character(linshi_rid$linshi_rid))
   match_right<-inner_join(wutb,linshi_rid,c("id_data_input"="linshi_rid"))%>%dplyr::select(id_data_input=id_data_input,id_che300)
   match_right<-inner_join(qx_che300,match_right,c("car_id"="id_che300"))
-  match_right<-data.frame(match_des="right",id_data_input=match_right$id_data_input,id_che300=match_right$car_id,brand=match_right$car_name,series=match_right$car_series1)
+  if(nrow(match_right)==0){match_right<-NULL
+  }else{match_right<-data.frame(match_des="right",id_data_input=match_right$id_data_input,id_che300=match_right$car_id,brand=match_right$car_name,series=match_right$car_series1)}
   return_db<-rbind(match_right,match_repeat,match_not)
   return(list(confidence=confidence,match_not=match_not,match_repeat=match_repeat,match_right=match_right,return_db=return_db))
 }

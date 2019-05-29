@@ -1,3 +1,4 @@
+source(paste0(gsub("\\/bat","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()})),'/Model_library/config_vdatabase_yck_major_info/config_add.R',sep=""),echo=TRUE,encoding="utf-8")
 source(paste0(gsub("\\/bat","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()})),'/main/main_che300.R',sep=""),echo=TRUE,encoding="utf-8")
 source(paste0(gsub("\\/bat","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()})),'/main/main_wash.R',sep=""),echo=TRUE,encoding="utf-8")
 ####ID_match

@@ -4,23 +4,27 @@ gc()
 library(dplyr)
 library(stringr)
 library(raster)
-#help(package="dplyr")
-#读取数据
 library(RMySQL)
-deep_local<-gsub("\\/bat|\\/main.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
-loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
+library(reshape2)
+local_file<-gsub("\\/bat|\\/main.*","",tryCatch(dirname(rstudioapi::getActiveDocumentContext()$path),error=function(e){getwd()}))
+source(paste0(local_file,"\\config\\config_fun\\fun_mysql_config_up.R"),echo=FALSE,encoding="utf-8")
+local_defin<-fun_mysql_config_up()$local_defin
+local_defin_yun<-fun_mysql_config_up()$local_defin_yun
+data_new<-Sys.Date()%>%as.character()
+#步骤一
+loc_channel<-dbConnect(MySQL(),user = local_defin$user,host=local_defin$host,password= local_defin$password,dbname=local_defin$dbname)
 dbSendQuery(loc_channel,'SET NAMES gbk')
 table.name<-dbListTables(loc_channel)
 # field.name<-dbListFields(loc_channel,"")
 yck_czp<-dbFetch(dbSendQuery(loc_channel,"SELECT id car_id,brand brand_name,series series_name,model model_name,emission discharge_standard,displacement liter FROM spider_www_souche a
-                             WHERE a.id>(SELECT MAX(id_data_input) FROM analysis_match_id WHERE car_platform in ('souche'));"),-1)
+                             WHERE a.id>(SELECT max_id FROM analysis_match_idmax_temp WHERE car_platform in ('souche'));"),-1)
 rm_series_rule<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM config_reg_series_rule;"),-1)
 che300<-dbFetch(dbSendQuery(loc_channel,"SELECT * FROM analysis_che300_cofig_info;"),-1)
 dbDisconnect(loc_channel)
-rm_rule<- read.csv(paste0(deep_local,"\\config\\config_file\\reg_rule.csv",sep=""),header = T,sep = ",")
-out_rrc<- read.csv(paste0(deep_local,"\\config\\config_file\\out_rrc.csv",sep=""),header = T,sep = ",")
-source(paste0(deep_local,"\\config\\config_fun\\fun_stopWords.R",sep=""),echo=TRUE,encoding="utf-8")
-source(paste0(deep_local,"\\config\\config_fun\\fun_normalization.R",sep=""),echo=TRUE,encoding="utf-8")
+rm_rule<- read.csv(paste0(local_file,"\\config\\config_file\\reg_rule.csv",sep=""),header = T,sep = ",")
+out_rrc<- read.csv(paste0(local_file,"\\config\\config_file\\out_rrc.csv",sep=""),header = T,sep = ",")
+source(paste0(local_file,"\\config\\config_fun\\fun_stopWords.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(local_file,"\\config\\config_fun\\fun_normalization.R",sep=""),echo=TRUE,encoding="utf-8")
 yck_czp<-data.frame(yck_czp,model_price="",car_auto="")
 
 
@@ -177,28 +181,139 @@ for (i in 1:dim(qx_souche)[2]) {
 }
 qx_souche<-data.frame(qx_souche)
 qx_souche$X<-as.integer(as.character(qx_souche$X))
+#剔除不包含的车系
+df_filter<- gsub('-进口','',unique(qx_souche$car_series1)) %>% as.character()
+che300<-che300 %>% filter(gsub('-进口','',car_series1)%in%df_filter)
 #########################################################################################################
 ##################################################第二大章：数据匹配#####################################
-source(paste0(deep_local,"\\config\\config_fun\\fun_match.R",sep=""),echo=TRUE,encoding="utf-8")
-source(paste0(deep_local,"\\config\\config_fun\\fun_iteration.R",sep=""),echo=TRUE,encoding="utf-8")
-source(paste0(deep_local,"\\config\\config_fun\\fun_match_result_czb.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(local_file,"\\config\\config_fun\\fun_match.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(local_file,"\\config\\config_fun\\fun_iteration.R",sep=""),echo=TRUE,encoding="utf-8")
+source(paste0(local_file,"\\config\\config_fun\\fun_match_result_czb.R",sep=""),echo=TRUE,encoding="utf-8")
 data_input<-qx_souche
-##调用函数计算结果列表
-list_result<-fun_match_result_czb(che300,qx_souche)
-confidence<-list_result$confidence
-return_db<-list_result$return_db
-match_right<-list_result$match_right
-match_repeat<-list_result$match_repeat
-match_not<-list_result$match_not
-return_db<-data.frame(car_platform="souche",return_db)
-return_db$id_che300<-as.integer(as.character(return_db$id_che300))
-write.csv(return_db,paste0(deep_local,"\\file\\output\\souche.csv",sep=""),row.names = F)
-###日志文件
-rizhi<-data.frame(platform=unique(return_db$car_platform),
-                  accurate=round(accurate[2]/(accurate[1]+accurate[2]),3),
-                  n_right=nrow(match_right),n_repeat=nrow(match_repeat),
-                  n_not=nrow(match_not),add_date=Sys.Date())
-loc_channel<-dbConnect(MySQL(),user = "root",host="192.168.0.111",password= "000000",dbname="yck-data-center")
-dbSendQuery(loc_channel,'SET NAMES gbk')
-dbWriteTable(loc_channel,"log_analysis_match_id",rizhi,append=T,row.names=F)
-dbDisconnect(loc_channel)
+
+#step2 function#
+fun_step2<-function(){
+  file_dir<-local_file
+  loc_channel<-dbConnect(MySQL(),user = local_defin$user,host=local_defin$host,password= local_defin$password,dbname=local_defin$dbname)
+  dbSendQuery(loc_channel,'SET NAMES gbk')
+  input_orig<-dbFetch(dbSendQuery(loc_channel,paste0("SELECT m.car_platform,m.id_data_input,m.id_che300,p.model_year,p.yck_brandid,p.yck_seriesid,p.is_import,p.is_green,p.brand_name brand,p.series_name series,p.model_name,n.color,p.liter,p.auto,p.discharge_standard,p.car_level,n.location,n.regDate,n.quotes,p.model_price,n.mile,",
+                                                   " '' state,'' trans_fee,'' transfer,'' annual,'' insure,DATE_FORMAT(n.add_time,'%Y-%m-%d')  add_time,DATE_FORMAT(n.update_time,'%Y-%m-%d') update_time",
+                                                   " FROM (SELECT car_platform,id_data_input,id_che300 FROM analysis_match_id_temp where car_platform='souche' AND match_des='right') m",
+                                                   " INNER JOIN spider_www_souche n ON m.id_data_input=n.id",
+                                                   " INNER JOIN config_vdatabase_yck_major_info p ON m.id_che300=p.model_id;")),-1)
+  config_distr<-dbFetch(dbSendQuery(loc_channel,"SELECT DISTINCT regional,b.province,a.key_municipal city FROM config_district a
+                                  INNER JOIN config_district_regional b ON a.key_province=b.province;"),-1)
+  config_distr_all<-dbFetch(dbSendQuery(loc_channel,"SELECT DISTINCT regional,b.province,a.key_municipal city,a.key_county FROM config_district a
+                                  INNER JOIN config_district_regional b ON a.key_province=b.province;"),-1)
+  config_series_bcountry<-dbFetch(dbSendQuery(loc_channel,"SELECT DISTINCT yck_brandid,car_country FROM config_vdatabase_yck_brand"),-1)
+  dbDisconnect(loc_channel)
+  ######
+  input_orig$add_time<-as.Date(input_orig$add_time)
+  input_orig$mile<-round(input_orig$mile/10000,2)
+  input_orig$quotes<-round(input_orig$quotes/10000,2)
+
+  #######location清洗&nbsp
+  input_orig$location<-gsub("襄樊","襄阳",input_orig$location)
+  input_orig$location<-gsub("杨凌|杨陵","咸阳",input_orig$location)
+  input_orig$location<-gsub("农垦系统","哈尔滨",input_orig$location)
+  input_orig$location<-gsub("湖北","武汉",input_orig$location)
+  location_ls<-str_extract(input_orig$location,paste0(config_distr$city,sep="",collapse = "|"))
+  #通过区县
+  location_ls1<-data.frame(key_county=str_extract(input_orig$location[which(is.na(location_ls))],paste0(config_distr_all$key_county,sep="",collapse = "|")))
+  location_ls1$key_county<-as.character(location_ls1$key_county)
+  location_ls[which(is.na(location_ls))]<-as.character(right_join(config_distr_all,location_ls1,by="key_county")$city)
+  #最终
+  input_orig$location<-location_ls
+  input_orig<-inner_join(input_orig,config_distr,c("location"="city"))
+  ##########
+  input_orig<-inner_join(input_orig,config_series_bcountry,by='yck_brandid')
+  user_years<-round((as.Date(input_orig$add_time)-as.Date(input_orig$regDate))/365,2)
+  input_orig<-data.frame(input_orig,user_years)
+  if(nrow(input_orig)==0){
+    print("无数据")
+  }else{
+    input_orig$regDate<-cut(as.Date(input_orig$regDate),breaks="month")
+  }
+  input_orig$user_years<-as.numeric(as.character(input_orig$user_years))
+  ##年检(无)
+  ##保险(无)
+  ##转手(大于等于1次)
+  input_orig$transfer<-gsub("无","0",input_orig$transfer)
+  input_orig$transfer<-gsub(".*-.*","1",input_orig$transfer)
+  ##分区字段(放最后)
+  input_orig<-data.frame(input_orig,partition_month=format(input_orig$add_time,"%Y%m"))
+  wutb<-input_orig %>% dplyr::select(-regional)
+  
+  ###清洗为NA
+  wutb$annual[which(is.na(wutb$annual))]<-''
+  wutb$transfer[which(is.na(wutb$transfer))]<-''
+  wutb$insure[which(is.na(wutb$insure))]<-''
+  wutb$state[which(is.na(wutb$state))]<-''
+  wutb$trans_fee[which(is.na(wutb$trans_fee))]<-''
+  wutb$transfer<-gsub('.*数据|NA','',wutb$transfer)
+  wutb$annual<-gsub('NA','',wutb$annual)
+  wutb$insure<-gsub('NA','',wutb$insure)
+  wutb$state<-gsub('NA','',wutb$state)
+  wutb$trans_fee<-gsub('NA','',wutb$trans_fee)
+  #清洗color
+  wutb$color<-gsub("――|-|无数据|null|[0-9]","",wutb$color)
+  wutb$color<-gsub("其他","其它",wutb$color)
+  wutb$color<-gsub("色","",wutb$color)
+  wutb$color<-gsub("浅|深|象牙|冰川","",wutb$color)
+  wutb<-data.frame(wutb,date_add=format(Sys.time(),'%Y-%m-%d'))
+  write.csv(wutb,paste0(file_dir,"/file/output/analysis_wide_table.csv",sep=""),
+            row.names = F,fileEncoding = "UTF-8",quote = F)
+  loc_channel<-dbConnect(MySQL(),user = local_defin$user,host=local_defin$host,password= local_defin$password,dbname=local_defin$dbname)
+  dbSendQuery(loc_channel,'SET NAMES gbk')
+  dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE '",local_file,"/file/output/analysis_wide_table.csv'",
+                                 " INTO TABLE analysis_wide_table CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;",sep=""))
+  dbSendQuery(loc_channel,"DELETE FROM analysis_match_id_temp WHERE car_platform='souche'")
+  dbDisconnect(loc_channel)
+  loc_channel<-dbConnect(MySQL(),user = local_defin_yun$user,host=local_defin_yun$host,password= local_defin_yun$password,dbname=local_defin_yun$dbname)
+  dbSendQuery(loc_channel,'SET NAMES gbk')
+  dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE '",local_file,"/file/output/analysis_wide_table.csv'",
+                                 " INTO TABLE analysis_wide_table CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;",sep=""))
+  dbSendQuery(loc_channel,"DELETE FROM analysis_match_id_temp WHERE car_platform='souche'")
+  dbDisconnect(loc_channel)
+}
+
+#step3数据处理
+list_result<-tryCatch({fun_match_result(che300,data_input)},
+                      error=function(e){0},
+                      finally={-1})
+if(length(list_result)>1){
+  return_db<-list_result$return_db
+  match_right<-list_result$match_right
+  match_repeat<-list_result$match_repeat
+  match_not<-list_result$match_not
+  return_db<-data.frame(car_platform="souche",return_db) %>% dplyr::select(-brand,-series) %>% mutate(date_add=Sys.Date())
+  return_db$id_che300<-as.integer(as.character(return_db$id_che300))
+  return_db$id_che300[is.na(return_db$id_che300)]<-''
+  #判别是否存在正确的匹配
+  if(nrow(match_right)>0){
+    write.csv(return_db,paste0(local_file,"\\file\\output\\souche.csv",sep=""),row.names = F,fileEncoding = "UTF-8",quote = F)
+    rizhi<-data.frame(platform=unique(return_db$car_platform),
+                      accurate=round(accurate[2]/(accurate[1]+accurate[2]),3),
+                      n_right=nrow(match_right),n_repeat=nrow(match_repeat),
+                      n_not=nrow(match_not),add_date=Sys.Date())
+    loc_channel<-dbConnect(MySQL(),user = local_defin$user,host=local_defin$host,password= local_defin$password,dbname=local_defin$dbname)
+    dbSendQuery(loc_channel,'SET NAMES gbk')
+    dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE '",local_file,"/file/output/souche.csv'",
+                                    " INTO TABLE analysis_match_id CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;",sep=""))
+    dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE '",local_file,"/file/output/souche.csv'",
+                                   " INTO TABLE analysis_match_id_temp CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;",sep=""))
+    dbSendQuery(loc_channel,paste0("UPDATE analysis_match_idmax_temp SET max_id= '",max(return_db$id_data_input),"',date_add='",Sys.Date(),"' WHERE car_platform='souche'"))
+    dbWriteTable(loc_channel,"log_analysis_match_id",rizhi,append=T,row.names=F)
+    dbDisconnect(loc_channel)
+    loc_channel<-dbConnect(MySQL(),user = local_defin_yun$user,host=local_defin_yun$host,password= local_defin_yun$password,dbname=local_defin_yun$dbname)
+    dbSendQuery(loc_channel,'SET NAMES gbk')
+    dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE '",local_file,"/file/output/souche.csv'",
+                                   " INTO TABLE analysis_match_id CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;",sep=""))
+    dbSendQuery(loc_channel,paste0("LOAD DATA LOCAL INFILE '",local_file,"/file/output/souche.csv'",
+                                   " INTO TABLE analysis_match_id_temp CHARACTER SET utf8 FIELDS TERMINATED BY ',' lines terminated by '\r\n' IGNORE 1 LINES;",sep=""))
+    dbSendQuery(loc_channel,paste0("UPDATE analysis_match_idmax_temp SET max_id= '",max(return_db$id_data_input),"',date_add='",Sys.Date(),"' WHERE car_platform='souche'"))
+    dbWriteTable(loc_channel,"log_analysis_match_id",rizhi,append=T,row.names=F)
+    dbDisconnect(loc_channel)
+    fun_step2()
+  }
+}

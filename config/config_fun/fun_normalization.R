@@ -170,6 +170,7 @@ fun_normalization<-function(input_test) {
   input_test<-gsub("斯宾特Sprinter|Sprinter","斯宾特",input_test)
   input_test<-gsub("BRABUS 巴博斯|BRABUS","巴博斯",input_test)
   input_test<-gsub("MISTRA名图|名图MISTRA|MISTRA","名图",input_test)
+  input_test<-gsub("雅致ARNAGE|ARNAGE雅致|ARNAGE","雅致",input_test)
   input_test<-gsub("福仕达新鸿达","福仕达鸿达",input_test)
   input_test<-gsub("！","!",input_test)
   #福特部分
